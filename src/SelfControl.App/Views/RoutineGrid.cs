@@ -35,7 +35,26 @@ public class RoutineGrid : Control
 
     (RoutineBlock b, GridZone zone, int grab, DayOfWeek day, int s, int e)? _drag;
 
+    Point? _hover;
+
     public RoutineGrid() { ClipToBounds = true; }
+
+    protected override void OnPointerExited(PointerEventArgs e) { base.OnPointerExited(e); _hover = null; }
+
+    /// <summary>Ctrl+V: adds a copy of <paramref name="src"/> under the mouse, or right after the selected block (else the original) on the same day.</summary>
+    public RoutineBlock? Paste(RoutineBlock src)
+    {
+        if (_routine == null) return null;
+        var nb = new RoutineBlock { Title = src.Title, Color = src.Color, Day = src.Day, StartMin = src.StartMin, EndMin = src.EndMin };
+        var after = Selected ?? src;
+        if (_hover is { } p) RoutineOps.Move(nb, DayOfColumn(ColumnAt(p.X, Bounds.Width)), RoutineOps.SnapMin(MinuteAt(p.Y)));
+        else RoutineOps.Move(nb, after.Day, after.EndMin);
+        _routine.Blocks.Add(nb);
+        Selected = nb;
+        InvalidateVisual();
+        Changed?.Invoke();
+        return nb;
+    }
 
     // ---- pure geometry ----
     public static int MinuteAt(double y) => (int)Math.Round(y * 60.0 / HourH);
@@ -101,6 +120,7 @@ public class RoutineGrid : Control
     {
         base.OnPointerMoved(e);
         var p = e.GetPosition(this);
+        _hover = p.X >= LeftW ? p : null;
         if (_drag is not { } d)
         {
             var z = HitTest(p).zone;

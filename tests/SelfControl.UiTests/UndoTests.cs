@@ -79,4 +79,31 @@ public class UndoTests
         }
         finally { s.Dispose(); try { Directory.Delete(dir, true); } catch { } }
     }
+
+    [AvaloniaFact]
+    public void CopyPaste_AddsCopyAfterSelected_AndIsUndoable()
+    {
+        var (s, dir) = Make();
+        try
+        {
+            var r = new Routine { Name = "R" };
+            r.Blocks.Add(new RoutineBlock { Title = "X", Day = DayOfWeek.Monday, StartMin = 600, EndMin = 660, Color = "#123456" });
+            s.Data.Routines.Add(r); s.DataChanged();
+            var view = new RoutineView(s);
+            view.SelectRoutine(r.Id);
+            Assert.False(view.CopySelected());            // nothing selected yet
+            view.WeekGrid.Select(r.Blocks[0]);
+            Assert.True(view.CopySelected());
+            Assert.True(view.Paste());
+            Assert.True(view.Paste());                     // each paste goes after the last one
+            var b = s.Data.Routines[0].Blocks;
+            Assert.Equal(3, b.Count);
+            Assert.Equal(new[] { 600, 660, 720 }, b.Select(x => x.StartMin));
+            Assert.All(b, x => { Assert.Equal("X", x.Title); Assert.Equal("#123456", x.Color); Assert.Equal(DayOfWeek.Monday, x.Day); });
+            Assert.Equal(3, b.Select(x => x.Id).Distinct().Count());
+            s.Undo();
+            Assert.Equal(2, s.Data.Routines[0].Blocks.Count);
+        }
+        finally { s.Dispose(); try { Directory.Delete(dir, true); } catch { } }
+    }
 }

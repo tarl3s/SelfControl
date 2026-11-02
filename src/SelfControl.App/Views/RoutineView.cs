@@ -86,6 +86,19 @@ public class RoutineView : UserControl
     internal Guid? SelectedRoutineId => Current?.Id;
     internal void SelectRoutine(Guid id) => _picker.SelectedItem = _data.Routines.FirstOrDefault(r => r.Id == id);
 
+    static RoutineBlock? _clipboard;
+
+    /// <summary>Ctrl+C: remembers the selected block (kept across routines). False when none is selected.</summary>
+    public bool CopySelected()
+    {
+        if (_grid.Selected is not { } b) return false;
+        _clipboard = new RoutineBlock { Title = b.Title, Color = b.Color, Day = b.Day, StartMin = b.StartMin, EndMin = b.EndMin };
+        return true;
+    }
+
+    /// <summary>Ctrl+V: pastes the copied block (see <see cref="RoutineGrid.Paste"/>).</summary>
+    public bool Paste() => _clipboard != null && _grid.Paste(_clipboard) != null;
+
     /// <summary>Delete key: removes the selected block. False when no block is selected.</summary>
     public bool DeleteSelected()
     {

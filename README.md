@@ -38,7 +38,7 @@ cloud: everything stays on your computer.
   - pick programs from your installed apps (like Windows' *Installed apps* list) or any `.exe`.
 - **Hourly breaks** — after each hour at the computer it suggests guided stretches or an eye exercise (a ball to
   follow with your eyes: side to side, up and down, circles, near and far).
-- **Ctrl+Z** undoes the last change, **Delete** removes the selected routine block, and you can export / import all
+- **Ctrl+Z** undoes the last change, **Delete** removes the selected routine block, **Ctrl+C / Ctrl+V** copy and paste it, and you can export / import all
   your data in Settings. English and Portuguese.
 
 It's honour-based on purpose: SelfControl never checks whether you really did a task, and it's easy to quit. It's

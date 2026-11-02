@@ -41,13 +41,15 @@ public partial class MainWindow : Window
 
     void ShowSelected() => _host.Content = _views[Math.Max(0, _nav.SelectedIndex)];
 
-    /// <summary>Ctrl+Z undoes the last change; Delete removes the selected routine block. Text boxes keep their own keys.</summary>
+    /// <summary>Ctrl+Z undoes the last change; Delete removes and Ctrl+C / Ctrl+V copy and paste the selected routine block. Text boxes keep their own keys.</summary>
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
         if (e.Handled || _state == null || FocusManager?.GetFocusedElement() is TextBox) return;
         if (e.Key == Key.Z && e.KeyModifiers == KeyModifiers.Control) e.Handled = _state.Undo();
         else if (e.Key == Key.Delete && _host.Content is RoutineView rv) e.Handled = rv.DeleteSelected();
+        else if (e.Key == Key.C && e.KeyModifiers == KeyModifiers.Control && _host.Content is RoutineView rc) e.Handled = rc.CopySelected();
+        else if (e.Key == Key.V && e.KeyModifiers == KeyModifiers.Control && _host.Content is RoutineView rp) e.Handled = rp.Paste();
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
