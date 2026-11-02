@@ -24,6 +24,8 @@ public sealed class AppState : IDisposable
     public BreaktimeTracker Tracker { get; }
     public IAutostart Autostart { get; }
     public bool LoadFailed => _store.LoadFailed;
+    /// <summary>Where Início copies chosen pictures (same base folder as data.json).</summary>
+    public string ImagesFolder => Path.Combine(_store.Folder, "images");
     public DateTime Now => _now();
 
     /// <summary>Raised on the UI thread when a watched app is running while locked and needs a warning (Task 8 shows it).</summary>
@@ -47,6 +49,12 @@ public sealed class AppState : IDisposable
         Tracker = new BreaktimeTracker(_now);
         _lastCheck = _now();
         _today = DateOnly.FromDateTime(_lastCheck);
+        if (firstRun && Data.Home.Count == 0)
+        {
+            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.Text, Text = "Bem-vindo" });
+            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.TodayRoutine });
+            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.TodayTasks });
+        }
         if (firstRun) { try { autostart.Enabled = true; } catch { /* registry unavailable: not fatal */ } }
 
         _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
@@ -92,6 +100,16 @@ public sealed class AppState : IDisposable
     {
         Data = data;
         DataChanged();
+    }
+
+    public void Export(string path) => _store.Export(Data, path);
+
+    /// <summary>Replaces all data with the file's. Returns an error message for the user, or null on success.</summary>
+    public string? Import(string path)
+    {
+        try { ReplaceData(_store.Import(path)); SaveNow(); return null; }
+        catch (InvalidDataException) { return "Arquivo inválido"; }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return "Não foi possível ler o arquivo"; }
     }
 
     public bool IsLocked => TaskRules.IsLocked(Data, DateOnly.FromDateTime(_now()));

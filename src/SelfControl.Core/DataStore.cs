@@ -10,6 +10,9 @@ public class DataStore
 
     public DataStore(string folder) => _folder = folder;
 
+    /// <summary>The folder holding data.json; other per-user files (home images) live beside it.</summary>
+    public string Folder => _folder;
+
     /// <summary>True when the last Load could not read an existing file; Save then does nothing so it is never overwritten.</summary>
     public bool LoadFailed { get; private set; }
 

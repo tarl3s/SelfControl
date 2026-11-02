@@ -18,10 +18,12 @@ public partial class MainWindow : Window
     public MainWindow(AppState? state)
     {
         AvaloniaXamlLoader.Load(this);
-        _views = new Control[] { new HomeView(), new RoutineView(state), new EventsView(state), new TasksView(state) };
+        _views = new Control[] { new HomeView(state), new RoutineView(state), new EventsView(state), new TasksView(state) };
         _nav = this.FindControl<ListBox>("Nav")!;
         _host = this.FindControl<ContentControl>("Host")!;
         this.FindControl<Border>("LoadFailedBanner")!.IsVisible = state?.LoadFailed == true;
+        if (state != null) this.FindControl<Button>("Gear")!.Click += async (_, _) => await SettingsDialog.Show(this, state);
+        else this.FindControl<Button>("Gear")!.IsEnabled = false;
         _nav.SelectionChanged += (_, _) => ShowSelected();
         ShowSelected();
     }
