@@ -18,6 +18,7 @@ public class HomeView : UserControl
     readonly AppState? _state;
     readonly AppData _fallback = new();
     readonly StackPanel _panel = new() { Spacing = 12, Margin = new Thickness(24) };
+    string? _notice;
     readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(30) };
 
     public HomeView() : this(null) { }
@@ -40,6 +41,7 @@ public class HomeView : UserControl
     AppData Data => _state?.Data ?? _fallback;
     DateTime Now => _state?.Now ?? DateTime.Now;
     internal StackPanel Panel => _panel;
+    string ImagesFolder => _state?.ImagesFolder ?? Path.Combine(Path.GetTempPath(), "SelfControl-images");
 
     void Changed() { _state?.DataChanged(); Rebuild(); }
 
@@ -71,14 +73,15 @@ public class HomeView : UserControl
         if (files.Count == 0) return;
         try
         {
-            var folder = _state?.ImagesFolder ?? Path.Combine(Path.GetTempPath(), "SelfControl-images");
+            var folder = ImagesFolder;
             Directory.CreateDirectory(folder);
             var dest = Path.Combine(folder, Guid.NewGuid().ToString("N") + Path.GetExtension(files[0].Path.LocalPath).ToLowerInvariant());
             File.Copy(files[0].Path.LocalPath, dest);
-            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.Image, ImagePath = dest });
+            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.Image, ImagePath = Path.GetFileName(dest) });
+            _notice = null;
             Changed();
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _notice = "Não foi possível copiar a imagem"; Rebuild(); }
     }
 
     Button AddButton()
@@ -102,7 +105,8 @@ public class HomeView : UserControl
         if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox tb && _panel.IsVisualAncestorOf(tb)) return;
         _panel.Children.Clear();
         _panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children =
-            { new TextBlock { Text = "Início", FontSize = 24, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center }, AddButton() } });
+            { new TextBlock { Text = "Início", FontSize = 24, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center }, AddButton(),
+              new TextBlock { Text = _notice, IsVisible = _notice != null, VerticalAlignment = VerticalAlignment.Center } } });
         var blocks = Data.Home.ToList();
         for (int i = 0; i < blocks.Count; i++) _panel.Children.Add(Wrap(blocks[i], i, blocks.Count));
     }
@@ -146,12 +150,13 @@ public class HomeView : UserControl
     static StackPanel Section(string title) =>
         new() { Spacing = 4, Children = { new TextBlock { Text = title, FontSize = 16, FontWeight = FontWeight.SemiBold } } };
 
-    static Control ImageBody(HomeBlock block)
+    Control ImageBody(HomeBlock block)
     {
         try
         {
-            if (block.ImagePath != null && File.Exists(block.ImagePath))
-                return new Image { Source = new Bitmap(block.ImagePath), MaxHeight = 320, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
+            var path = block.ImagePath == null ? null : Path.IsPathRooted(block.ImagePath) ? block.ImagePath : Path.Combine(ImagesFolder, block.ImagePath);
+            if (path != null && File.Exists(path))
+                return new Image { Source = new Bitmap(path), MaxHeight = 320, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
         }
         catch (Exception) { }
         return new TextBlock { Text = "Imagem não encontrada", Foreground = Dim };

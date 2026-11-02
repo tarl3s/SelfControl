@@ -107,7 +107,14 @@ public sealed class AppState : IDisposable
     /// <summary>Replaces all data with the file's. Returns an error message for the user, or null on success.</summary>
     public string? Import(string path)
     {
-        try { ReplaceData(_store.Import(path)); SaveNow(); return null; }
+        try
+        {
+            var data = _store.Import(path);
+            _store.AcceptReplacement();
+            Tracker.Clear(); _breaking.Clear();
+            ReplaceData(data); SaveNow();
+            return null;
+        }
         catch (InvalidDataException) { return "Arquivo inválido"; }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return "Não foi possível ler o arquivo"; }
     }

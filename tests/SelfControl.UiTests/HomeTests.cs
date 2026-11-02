@@ -118,3 +118,66 @@ public class HomeTests
         Assert.Single(r.State.Data.Tasks);
     }
 }
+
+public class ImportTests
+{
+    sealed class NoBlocker : IBlocker
+    {
+        public event Action<string>? AppSeen { add { } remove { } }
+        public event Action<string>? AppClosed { add { } remove { } }
+        public void Kill(string exe) { }
+        public void SetWatched(IEnumerable<string> exes) { }
+    }
+    sealed class NoNotifier : INotifier { public void Show(string t, string m) { } }
+    sealed class FakeAutostart : IAutostart { public bool Enabled { get; set; } }
+
+    [AvaloniaFact]
+    public void Import_WithOpenRoutineView_ShowsAndEditsNewData()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "sc-imp-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var state = new AppState(new DataStore(dir), new NoBlocker(), new NoNotifier(), new FakeAutostart());
+            var view = new RoutineView(state);
+            var src = new AppData();
+            var rt = new Routine { Name = "Importada" };
+            rt.Blocks.Add(new RoutineBlock { Title = "B", Day = DayOfWeek.Monday, StartMin = 60, EndMin = 120 });
+            src.Routines.Add(rt); src.ActiveRoutineId = rt.Id;
+            var file = Path.Combine(dir, "in.json");
+            new DataStore(dir).Export(src, file);
+            Assert.Null(state.Import(file));
+            var picker = view.GetLogicalDescendants().OfType<ComboBox>().First();
+            Assert.Equal("Importada", ((Routine)picker.SelectedItem!).Name);
+            var shown = (Routine)picker.SelectedItem!;
+            Assert.Same(state.Data.Routines[0], shown);
+            view.ActiveToggle.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Primitives.ToggleButton.ClickEvent));
+            Assert.Equal(rt.Id, state.Data.ActiveRoutineId);
+            state.Dispose();
+        }
+        finally { try { Directory.Delete(dir, true); } catch { } }
+    }
+
+    [AvaloniaFact]
+    public void Import_OverUnreadableFile_ClearsLoadFailedAndSaves()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "sc-imp-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var path = Path.Combine(dir, "data.json");
+            File.WriteAllText(path, "{}");
+            using var locked = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+            var state = new AppState(new DataStore(dir), new NoBlocker(), new NoNotifier(), new FakeAutostart());
+            Assert.True(state.LoadFailed);
+            locked.Dispose();
+            var src = new AppData(); src.Tasks.Add(new TaskItem { Title = "t" });
+            var file = Path.Combine(dir, "in.json");
+            new DataStore(dir).Export(src, file);
+            Assert.Null(state.Import(file));
+            Assert.False(state.LoadFailed);
+            Assert.Single(new DataStore(dir).Load().Tasks);
+            state.Dispose();
+        }
+        finally { try { Directory.Delete(dir, true); } catch { } }
+    }
+}

@@ -63,6 +63,9 @@ public class DataStore
         File.WriteAllText(path, JsonSerializer.Serialize(data, Options));
     }
 
+    /// <summary>After a successful import over an unreadable file: saving is allowed again.</summary>
+    public void AcceptReplacement() => LoadFailed = false;
+
     public AppData Import(string path)
     {
         try

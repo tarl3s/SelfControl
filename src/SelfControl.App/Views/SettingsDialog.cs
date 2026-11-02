@@ -21,10 +21,18 @@ static class SettingsDialog
         var close = RoutineDialogs.Btn("Fechar", true);
         var auto = new CheckBox { Content = "Iniciar com o Windows" };
         try { auto.IsChecked = state.Autostart.Enabled; } catch (Exception) { auto.IsEnabled = false; }
+        bool syncing = false;
         auto.IsCheckedChanged += (_, _) =>
         {
+            if (syncing) return;
             try { state.Autostart.Enabled = auto.IsChecked == true; }
-            catch (Exception) { Say("Não foi possível alterar a inicialização com o Windows"); }
+            catch (Exception)
+            {
+                Say("Não foi possível alterar a inicialização com o Windows");
+                syncing = true;
+                try { auto.IsChecked = state.Autostart.Enabled; } catch (Exception) { auto.IsChecked = !auto.IsChecked; }
+                syncing = false;
+            }
         };
 
         var win = RoutineDialogs.Shell("Configurações", 420, 0, new StackPanel

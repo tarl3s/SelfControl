@@ -13,7 +13,8 @@ public class RoutineView : UserControl
 {
     static readonly string[] DayNames = { "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom" };
     readonly AppState? _state;
-    readonly AppData _data;
+    readonly AppData _fallback;
+    AppData _data => _state?.Data ?? _fallback;
     readonly ComboBox _picker = new() { MinWidth = 180, DisplayMemberBinding = new Avalonia.Data.Binding("Name") };
     readonly ToggleButton _active = new() { Content = "Ativa" };
     readonly RoutineGrid _grid = new();
@@ -31,7 +32,7 @@ public class RoutineView : UserControl
     internal RoutineView(AppData data, AppState? state)
     {
         _state = state;
-        _data = data;
+        _fallback = data;
         Button B(string t, Action a) { var b = new Button { Content = t }; b.Click += (_, _) => a(); return b; }
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(16, 12) };
         _rename = B("Renomear", Rename); _dup = B("Duplicar", Duplicate); _del = B("Excluir", Delete);
