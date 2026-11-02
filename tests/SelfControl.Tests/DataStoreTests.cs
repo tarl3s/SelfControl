@@ -6,6 +6,18 @@ public class DataStoreTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "sc_test_" + Guid.NewGuid().ToString("N"));
 
+    [Fact]
+    public void Load_LockedFile_ReturnsNew_NoRename()
+    {
+        Directory.CreateDirectory(_dir);
+        var p = Path.Combine(_dir, "data.json");
+        File.WriteAllText(p, "{}");
+        using (new FileStream(p, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            Assert.Empty(new DataStore(_dir).Load().Events);
+        Assert.True(File.Exists(p));
+        Assert.Empty(Directory.GetFiles(_dir, "data.corrupt-*"));
+    }
+
     public void Dispose() { if (Directory.Exists(_dir)) Directory.Delete(_dir, true); }
 
     [Fact]

@@ -40,4 +40,18 @@ public class EventSchedulerTests
         var next = EventScheduler.NextOccurrence(MonFri2130(), new DateTime(2026, 11, 7, 12, 0, 0));
         Assert.Equal(new DateTime(2026, 11, 9, 21, 30, 0), next);
     }
+
+    [Fact]
+    public void Exactly2MinLate_Fires()
+    {
+        var due = EventScheduler.Due(new[] { MonFri2130() }, new DateTime(2026, 11, 2, 21, 29, 0), new DateTime(2026, 11, 2, 21, 32, 0));
+        Assert.Single(due);
+    }
+
+    [Fact]
+    public void TwoMin1SecLate_Skipped()
+    {
+        var due = EventScheduler.Due(new[] { MonFri2130() }, new DateTime(2026, 11, 2, 21, 29, 0), new DateTime(2026, 11, 2, 21, 32, 1));
+        Assert.Empty(due);
+    }
 }

@@ -17,6 +17,8 @@ public class DataStore
         {
             return Parse(File.ReadAllText(FilePath));
         }
+        catch (IOException) { return new AppData(); }
+        catch (UnauthorizedAccessException) { return new AppData(); }
         catch (Exception e) when (e is JsonException or InvalidDataException)
         {
             File.Move(FilePath, Path.Combine(_folder, $"data.corrupt-{DateTime.Now:yyyyMMddHHmmss}.json"), true);
