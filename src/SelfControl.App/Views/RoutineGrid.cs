@@ -26,6 +26,7 @@ public class RoutineGrid : Control
     public Routine? Routine { get => _routine; set { _routine = value; Selected = null; _drag = null; InvalidateVisual(); } }
     Routine? _routine;
     public RoutineBlock? Selected { get; private set; }
+    public void Select(RoutineBlock? b) { Selected = b; InvalidateVisual(); }
     public Func<DateTime> Now { get; set; } = () => DateTime.Now;
     /// <summary>Raised after a change is committed (create, end of drag, edit) so the owner saves.</summary>
     public event Action? Changed;

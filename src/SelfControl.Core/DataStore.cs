@@ -78,6 +78,12 @@ public class DataStore
         }
     }
 
+    /// <summary>Compact JSON snapshot of the data (used for undo).</summary>
+    public static string Snapshot(AppData data) => JsonSerializer.Serialize(data);
+
+    /// <summary>Rebuilds data from a <see cref="Snapshot"/>.</summary>
+    public static AppData FromSnapshot(string json) => Parse(json);
+
     private static AppData Parse(string json)
     {
         var data = JsonSerializer.Deserialize<AppData>(json) ?? throw new InvalidDataException("Empty data file.");

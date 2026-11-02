@@ -21,6 +21,9 @@ public sealed class AppState : IDisposable
     DateOnly _today;
     bool _wasLocked;
     readonly HashSet<string> _retryClose = new(StringComparer.OrdinalIgnoreCase);
+    const int UndoLimit = 100;
+    readonly List<string> _undo = new();
+    string _snapshot;
 
     public AppData Data { get; private set; }
     public BreaktimeTracker Tracker { get; }
@@ -58,6 +61,7 @@ public sealed class AppState : IDisposable
             Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.TodayTasks });
         }
         if (firstRun) { try { autostart.Enabled = true; } catch { /* registry unavailable: not fatal */ } }
+        _snapshot = DataStore.Snapshot(Data);
 
         _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _saveTimer.Tick += (_, _) => SaveNow();
@@ -92,6 +96,31 @@ public sealed class AppState : IDisposable
 
     /// <summary>Views call this after editing data: saves, re-evaluates the lock and the watched apps, refreshes views.</summary>
     public void DataChanged()
+    {
+        var snap = DataStore.Snapshot(Data);
+        if (snap != _snapshot)
+        {
+            _undo.Add(_snapshot);
+            if (_undo.Count > UndoLimit) _undo.RemoveAt(0);
+            _snapshot = snap;
+        }
+        Refresh();
+    }
+
+    public bool CanUndo => _undo.Count > 0;
+
+    /// <summary>Goes back to the data as it was before the last change (Ctrl+Z). False when there is nothing to undo.</summary>
+    public bool Undo()
+    {
+        if (_undo.Count == 0) return false;
+        _snapshot = _undo[^1];
+        _undo.RemoveAt(_undo.Count - 1);
+        Data = DataStore.FromSnapshot(_snapshot);
+        Refresh();
+        return true;
+    }
+
+    void Refresh()
     {
         Save();
         RefreshWatched();

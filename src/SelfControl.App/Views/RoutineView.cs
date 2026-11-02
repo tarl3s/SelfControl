@@ -83,6 +83,18 @@ public class RoutineView : UserControl
     }
 
     Routine? Current => _picker.SelectedItem as Routine;
+    internal RoutineGrid WeekGrid => _grid;
+    internal Guid? SelectedRoutineId => Current?.Id;
+    internal void SelectRoutine(Guid id) => _picker.SelectedItem = _data.Routines.FirstOrDefault(r => r.Id == id);
+
+    /// <summary>Delete key: removes the selected block. False when no block is selected.</summary>
+    public bool DeleteSelected()
+    {
+        if (_grid.Routine is not { } r || _grid.Selected is not { } b || !r.Blocks.Remove(b)) return false;
+        _grid.Refresh(deselect: true);
+        Save();
+        return true;
+    }
     Window? Owner => TopLevel.GetTopLevel(this) as Window;
     DateOnly Today => TodayProvider();
     bool InEffect(Routine? r) => r != null && RoutineResolver.For(_data, Today)?.Id == r.Id;
@@ -103,7 +115,8 @@ public class RoutineView : UserControl
         _busy = true;
         var cur = Current;
         _picker.ItemsSource = null; _picker.ItemsSource = _data.Routines;
-        _picker.SelectedItem = cur != null && _data.Routines.Contains(cur) ? cur : _data.Routines.FirstOrDefault();
+        // Match by id: after undo/import the routines are new objects.
+        _picker.SelectedItem = (cur == null ? null : _data.Routines.FirstOrDefault(r => r.Id == cur.Id)) ?? _data.Routines.FirstOrDefault();
         _busy = false;
         var shown = Current;
         if (shown != _grid.Routine) ShowSelected();
