@@ -66,3 +66,33 @@ public class RoutineOpsTests
         Assert.Single(lanes);
     }
 }
+
+public class DeleteRoutineTests
+{
+    [Fact]
+    public void DeleteRoutine_RemovesSchedulesOverridesAndActive()
+    {
+        var a = new Routine { Name = "A" }; var b = new Routine { Name = "B" };
+        var d = new AppData { ActiveRoutineId = a.Id };
+        d.Routines.AddRange(new[] { a, b });
+        var wk = new DateOnly(2026, 11, 2);
+        d.Schedules.Add(new RoutineSchedule { RoutineId = a.Id, WeekStart = wk });
+        d.Schedules.Add(new RoutineSchedule { RoutineId = b.Id, WeekStart = wk.AddDays(7) });
+        d.WeekOverrides.Add(new WeekOverride { RoutineId = a.Id, WeekStart = wk });
+        RoutineOps.DeleteRoutine(d, a.Id);
+        Assert.Equal(new[] { b }, d.Routines);
+        Assert.Null(d.ActiveRoutineId);
+        Assert.Single(d.Schedules);
+        Assert.Empty(d.WeekOverrides);
+    }
+
+    [Fact]
+    public void DeleteRoutine_KeepsActiveWhenOther()
+    {
+        var a = new Routine(); var b = new Routine();
+        var d = new AppData { ActiveRoutineId = b.Id };
+        d.Routines.AddRange(new[] { a, b });
+        RoutineOps.DeleteRoutine(d, a.Id);
+        Assert.Equal(b.Id, d.ActiveRoutineId);
+    }
+}

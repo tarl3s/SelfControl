@@ -26,6 +26,15 @@ public static class RoutineOps
         b.EndMin = b.StartMin + len;
     }
 
+    /// <summary>Removes a routine plus the schedules/overrides pointing at it, and clears it as the active one.</summary>
+    public static void DeleteRoutine(AppData data, Guid id)
+    {
+        data.Routines.RemoveAll(r => r.Id == id);
+        data.Schedules.RemoveAll(s => s.RoutineId == id);
+        data.WeekOverrides.RemoveAll(o => o.RoutineId == id);
+        if (data.ActiveRoutineId == id) data.ActiveRoutineId = null;
+    }
+
     /// <summary>Greedy lanes: blocks in the same lane never overlap; overlapping ones go side by side.</summary>
     public static List<List<RoutineBlock>> OverlapColumns(IEnumerable<RoutineBlock> dayBlocks)
     {

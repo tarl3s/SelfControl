@@ -6,7 +6,7 @@ namespace SelfControl.App;
 
 public partial class MainWindow : Window
 {
-    readonly Control[] _views = { new HomeView(), new RoutineView(), new EventsView(), new TasksView() };
+    readonly Control[] _views;
     readonly ListBox _nav;
     readonly ContentControl _host;
 
@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     public MainWindow(AppState? state)
     {
         AvaloniaXamlLoader.Load(this);
+        _views = new Control[] { new HomeView(), new RoutineView(state), new EventsView(), new TasksView() };
         _nav = this.FindControl<ListBox>("Nav")!;
         _host = this.FindControl<ContentControl>("Host")!;
         this.FindControl<Border>("LoadFailedBanner")!.IsVisible = state?.LoadFailed == true;
