@@ -18,7 +18,7 @@ public partial class MainWindow : Window
     public MainWindow(AppState? state)
     {
         AvaloniaXamlLoader.Load(this);
-        _views = new Control[] { new HomeView(), new RoutineView(state), new EventsView(), new TasksView() };
+        _views = new Control[] { new HomeView(), new RoutineView(state), new EventsView(state), new TasksView(state) };
         _nav = this.FindControl<ListBox>("Nav")!;
         _host = this.FindControl<ContentControl>("Host")!;
         this.FindControl<Border>("LoadFailedBanner")!.IsVisible = state?.LoadFailed == true;

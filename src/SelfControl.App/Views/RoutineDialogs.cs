@@ -11,21 +11,21 @@ static class RoutineDialogs
 {
     static readonly IBrush Dim = new SolidColorBrush(Color.Parse("#9A9A9A"));
 
-    static Window Shell(string title, double w, double h, Control content) => new()
+    internal static Window Shell(string title, double w, double h, Control content) => new()
     {
         Title = title, Width = w, SizeToContent = h <= 0 ? SizeToContent.Height : SizeToContent.Manual, Height = h <= 0 ? double.NaN : h,
         CanResize = false, WindowStartupLocation = WindowStartupLocation.CenterOwner,
         Background = new SolidColorBrush(Color.Parse("#0D0D0D")), Content = content,
     };
 
-    static Button Btn(string text, bool primary = false)
+    internal static Button Btn(string text, bool primary = false)
     {
         var b = new Button { Content = text, Padding = new Thickness(14, 6) };
         if (primary) b.Classes.Add("primary");
         return b;
     }
 
-    static T Docked<T>(T c, Dock d) where T : Control { DockPanel.SetDock(c, d); return c; }
+    internal static T Docked<T>(T c, Dock d) where T : Control { DockPanel.SetDock(c, d); return c; }
 
     public static async Task<string?> Prompt(Window owner, string title, string label, string initial)
     {

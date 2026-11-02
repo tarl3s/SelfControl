@@ -38,6 +38,8 @@ public partial class App : Application
             desktop.MainWindow = _window;
             if (!StartHidden) _window.Show();
             SetupTray();
+            var warnings = new WarningManager(state);
+            desktop.Exit += (_, _) => warnings.Dispose();
             desktop.Exit += (_, _) => state.Dispose();
         }
         base.OnFrameworkInitializationCompleted();
