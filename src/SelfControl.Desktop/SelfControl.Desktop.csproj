@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
     <ProjectReference Include="..\SelfControl.App\SelfControl.App.csproj" />
   </ItemGroup>
 </Project>

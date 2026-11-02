@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>SelfControl</title>
+<style>
+body{background:#000;color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}
+h1{font-weight:500}ul{text-align:left}
+select,button{font-size:1rem;padding:.5rem 1rem;margin:.5rem;background:#111;color:#fff;border:1px solid #fff;border-radius:6px;cursor:pointer}
+</style></head><body>
+<div id="warn"><h1>Termine suas tarefas antes de abrir <span id="site"></span></h1>
+<ul id="tasks"></ul>
+<div><select id="min"></select><button id="go">Breaktime</button></div></div>
+<div id="exp" hidden><h1>Breaktime acabou, volte às tarefas</h1><button id="close">Fechar</button></div>
+<script src="blocked.js"></script></body></html>
