@@ -15,6 +15,7 @@ public sealed class ExtensionBridge : IDisposable
     readonly Func<string, BridgeStatus> _check;
     readonly Action<string, int> _startBreak;
     readonly Action<string> _closed;
+    static readonly int[] AllowedMinutes = { 5, 10, 15, 20, 30, 45, 60 };
     readonly HttpListener _http = new();
 
     public ExtensionBridge(Func<string, BridgeStatus> check, Action<string, int> startBreak, Action<string> closed)
@@ -53,9 +54,9 @@ public sealed class ExtensionBridge : IDisposable
     {
         var req = ctx.Request; var res = ctx.Response;
         var origin = req.Headers["Origin"];
-        if (origin is null || !origin.StartsWith("chrome-extension://", StringComparison.Ordinal))
+        if (origin is not null && !origin.StartsWith("chrome-extension://", StringComparison.Ordinal))
         { res.StatusCode = 403; return; }
-        res.Headers["Access-Control-Allow-Origin"] = origin;
+        if (origin is not null) res.Headers["Access-Control-Allow-Origin"] = origin;
         res.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
         res.Headers["Access-Control-Allow-Headers"] = "Content-Type";
         if (req.HttpMethod == "OPTIONS") { res.StatusCode = 204; return; }
@@ -72,7 +73,7 @@ public sealed class ExtensionBridge : IDisposable
         }
         else if (req.HttpMethod == "POST" && path == "/break")
         {
-            if (int.TryParse(q["min"], out var min) && !string.IsNullOrWhiteSpace(q["site"])) _startBreak(q["site"]!, min);
+            if (int.TryParse(q["min"], out var min) && Array.IndexOf(AllowedMinutes, min) >= 0 && !string.IsNullOrWhiteSpace(q["site"])) _startBreak(q["site"]!, min);
             else res.StatusCode = 400;
         }
         else if (req.HttpMethod == "POST" && path == "/closed")

@@ -1,56 +1,85 @@
 const API = "http://127.0.0.1:47613";
 const PAGE = chrome.runtime.getURL("blocked.html");
-const tabSites = new Map();  // tabId -> site being tracked (blocked page or break)
-const breakTabs = new Map(); // tabId -> {site, back} while a break runs
+let failUntil = 0;
+let chain = Promise.resolve();
+const serial = (fn) => (chain = chain.then(fn, fn).catch(() => {}));
+
+// State survives worker suspension: { [tabId]: { site, back, breakEnd } }
+async function load() { return (await chrome.storage.session.get("tabs")).tabs || {}; }
+function save(tabs) { return chrome.storage.session.set({ tabs }); }
 
 async function check(host) {
+  if (Date.now() < failUntil) return null;
   try {
     const r = await fetch(API + "/check?host=" + encodeURIComponent(host));
-    return r.ok ? await r.json() : null;
-  } catch { return null; } // app not running: do nothing
+    if (!r.ok) throw 0;
+    return await r.json();
+  } catch { failUntil = Date.now() + 30000; return null; }
 }
 function post(path) { fetch(API + path, { method: "POST" }).catch(() => {}); }
 function blockedUrl(site, back, expired) {
   return PAGE + "?site=" + encodeURIComponent(site) + "&back=" + encodeURIComponent(back) + (expired ? "&expired=1" : "");
 }
-function leave(tabId) {
-  const site = tabSites.get(tabId);
-  if (site) {
-    tabSites.delete(tabId); breakTabs.delete(tabId);
-    post("/closed?site=" + encodeURIComponent(site));
+// Drop a tab's state; tell the app only when no other tab still has that site.
+function leave(tabs, tabId) {
+  const t = tabs[tabId];
+  if (!t) return;
+  delete tabs[tabId];
+  if (!Object.values(tabs).some((o) => o.site === t.site)) post("/closed?site=" + encodeURIComponent(t.site));
+}
+
+async function evaluate(tabId, url) {
+  const tabs = await load();
+  const known = tabs[tabId];
+  if (!url || !/^https?:/.test(url)) {
+    if (known && !(url || "").startsWith(PAGE)) { leave(tabs, tabId); await save(tabs); }
+    return;
+  }
+  const host = new URL(url).hostname;
+  if (known && known.site !== host) leave(tabs, tabId);
+  const s = await check(host);
+  if (!s || !s.blocked) {
+    if (tabs[tabId]) leave(tabs, tabId);
+    await save(tabs); return;
+  }
+  const cur = tabs[tabId] || { site: host, back: url };
+  cur.site = host; cur.back = url;
+  cur.breakEnd = s.phase === "Break" ? Date.now() + (s.remaining || 0) * 1000 : 0;
+  tabs[tabId] = cur;
+  await save(tabs);
+  if (s.phase !== "Break") chrome.tabs.update(tabId, { url: blockedUrl(host, url, s.phase === "Expired") }).catch(() => {});
+}
+
+// Break tabs whose time is up (or unknown) are re-checked and sent to the Expired page.
+async function checkBreaks(onlyTab) {
+  const tabs = await load();
+  for (const [id, t] of Object.entries(tabs)) {
+    if (!t.breakEnd || Date.now() < t.breakEnd) continue;
+    if (onlyTab !== undefined && Number(id) !== onlyTab) continue;
+    const s = await check(t.site);
+    if (!s) continue;
+    if (s.phase === "Expired") {
+      t.breakEnd = 0; await save(tabs);
+      chrome.tabs.update(Number(id), { url: blockedUrl(t.site, t.back, true) }).catch(() => {});
+    } else if (s.phase === "Break") { t.breakEnd = Date.now() + (s.remaining || 0) * 1000; await save(tabs); }
   }
 }
 
-chrome.webNavigation.onBeforeNavigate.addListener(async (d) => {
-  if (d.frameId !== 0 || !/^https?:/.test(d.url)) return;
-  const host = new URL(d.url).hostname;
-  const prev = tabSites.get(d.tabId);
-  if (prev && prev !== host) leave(d.tabId);
-  const s = await check(host);
-  if (!s || !s.blocked) return;
-  tabSites.set(d.tabId, host);
-  if (s.phase === "Break") { breakTabs.set(d.tabId, { site: host, back: d.url }); return; }
-  chrome.tabs.update(d.tabId, { url: blockedUrl(host, d.url, s.phase === "Expired") });
+chrome.webNavigation.onBeforeNavigate.addListener((d) => { if (d.frameId === 0) serial(() => evaluate(d.tabId, d.url)); });
+chrome.webNavigation.onHistoryStateUpdated.addListener((d) => { if (d.frameId === 0) serial(() => evaluate(d.tabId, d.url)); });
+chrome.tabs.onUpdated.addListener((id, info, tab) => {
+  if (info.status === "complete" || info.url) serial(async () => { await checkBreaks(id); if (info.url) await evaluate(id, tab.url); });
 });
+chrome.tabs.onActivated.addListener((a) => serial(() => checkBreaks(a.tabId)));
+chrome.tabs.onRemoved.addListener((id) => serial(async () => { const tabs = await load(); leave(tabs, id); await save(tabs); }));
 
-chrome.tabs.onRemoved.addListener(leave);
-
-// The blocked page tells us a break started so we can watch that tab.
 chrome.runtime.onMessage.addListener((m, sender) => {
-  if (m && m.type === "break" && sender.tab) {
-    tabSites.set(sender.tab.id, m.site);
-    breakTabs.set(sender.tab.id, { site: m.site, back: m.back });
-  }
+  if (m && m.type === "break" && sender.tab) serial(async () => {
+    const tabs = await load();
+    tabs[sender.tab.id] = { site: m.site, back: m.back, breakEnd: Date.now() + m.min * 60000 };
+    await save(tabs);
+  });
 });
 
-// Poll every 15 s during a break; at the end redirect to the Expired page.
-setInterval(async () => {
-  for (const [tabId, b] of [...breakTabs]) {
-    const s = await check(b.site);
-    if (!s) continue;
-    if (s.phase === "Expired") {
-      breakTabs.delete(tabId);
-      chrome.tabs.update(tabId, { url: blockedUrl(b.site, b.back, true) }).catch(() => {});
-    } else if (s.phase !== "Break") breakTabs.delete(tabId);
-  }
-}, 15000);
+chrome.alarms.create("poll", { periodInMinutes: 0.5 });
+chrome.alarms.onAlarm.addListener((a) => { if (a.name === "poll") serial(() => checkBreaks()); });

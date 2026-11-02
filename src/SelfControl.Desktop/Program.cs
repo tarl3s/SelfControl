@@ -41,8 +41,11 @@ internal static class Program
             var body = http.Send(rq).Content.ReadAsStringAsync().Result;
             Console.WriteLine(body);
             if (!body.Contains("\"blocked\":true")) return Fail("bad /check body");
-            var bad = http.GetAsync(ExtensionBridge.Prefix + "check?host=x").Result;
-            if (bad.StatusCode != HttpStatusCode.Forbidden) return Fail("no-origin request not refused");
+            var ok = http.GetAsync(ExtensionBridge.Prefix + "check?host=x").Result;
+            if (ok.StatusCode != HttpStatusCode.OK) return Fail("no-Origin request refused");
+            var ev = new HttpRequestMessage(HttpMethod.Get, ExtensionBridge.Prefix + "check?host=x"); ev.Headers.Add("Origin", "http://evil.com");
+            var bad = http.Send(ev);
+            if (bad.StatusCode != HttpStatusCode.Forbidden) return Fail("evil origin not refused");
             Console.WriteLine("SMOKE OK");
             return 0;
         }

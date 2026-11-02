@@ -11,7 +11,7 @@ function expired() {
 document.getElementById("close").onclick = () => chrome.tabs.getCurrent(t => chrome.tabs.remove(t.id));
 document.getElementById("go").onclick = async () => {
   await fetch(API + "/break?site=" + encodeURIComponent(site) + "&min=" + sel.value, { method: "POST" });
-  chrome.runtime.sendMessage({ type: "break", site, back });
+  chrome.runtime.sendMessage({ type: "break", site, back, min: Number(sel.value) });
   location.replace(back);
 };
 if (p.get("expired")) expired();
@@ -19,4 +19,6 @@ else fetch(API + "/check?host=" + encodeURIComponent(site)).then(r => r.json()).
   if (s.phase === "Expired") return expired();
   const ul = document.getElementById("tasks");
   (s.tasks || []).forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
-}).catch(() => {});
+}).catch(() => {
+  const ul = document.getElementById("tasks"); ul.innerHTML = ""; const li = document.createElement("li"); li.textContent = "SelfControl não está aberto"; ul.appendChild(li);
+});
