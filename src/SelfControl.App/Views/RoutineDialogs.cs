@@ -31,7 +31,7 @@ static class RoutineDialogs
     {
         string? result = null;
         var box = new TextBox { Text = initial, MinWidth = 260 };
-        var ok = Btn("OK", true); var cancel = Btn("Cancelar");
+        var ok = Btn("OK", true); var cancel = Btn(L.T("Cancel"));
         var win = Shell(title, 340, 0, new StackPanel
         {
             Margin = new Thickness(16), Spacing = 10,
@@ -65,53 +65,53 @@ static class RoutineDialogs
                     BorderBrush = (c ?? "") == (color ?? "") ? Brushes.White : new SolidColorBrush(Color.Parse("#3A3A3A")),
                     BorderThickness = new Thickness(2),
                 };
-                ToolTip.SetTip(sw, c == null ? "Sem cor" : c);
+                ToolTip.SetTip(sw, c == null ? L.T("No color") : c);
                 sw.Click += (_, _) => { color = c; Paint(); };
                 swatches.Children.Add(sw);
             }
         }
         Paint();
-        var save = Btn("Salvar", true); var del = Btn("Excluir"); var cancel = Btn("Cancelar");
-        var win = Shell("Editar atividade", 360, 0, new StackPanel
+        var save = Btn(L.T("Save"), true); var del = Btn(L.T("Delete")); var cancel = Btn(L.T("Cancel"));
+        var win = Shell(L.T("Edit activity"), 360, 0, new StackPanel
         {
             Margin = new Thickness(16), Spacing = 10,
             Children =
             {
-                new TextBlock { Text = "Título" }, title,
-                new TextBlock { Text = "Cor" }, swatches,
+                new TextBlock { Text = L.T("Title") }, title,
+                new TextBlock { Text = L.T("Color") }, swatches,
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { del, new Border { Width = 40 }, cancel, save } },
             }
         });
-        save.Click += (_, _) => { block.Title = string.IsNullOrWhiteSpace(title.Text) ? "Nova atividade" : title.Text.Trim(); block.Color = color; changed = true; win.Close(); };
+        save.Click += (_, _) => { block.Title = string.IsNullOrWhiteSpace(title.Text) ? L.T("New activity") : title.Text.Trim(); block.Color = color; changed = true; win.Close(); };
         del.Click += (_, _) => { routine.Blocks.Remove(block); changed = true; win.Close(); };
         cancel.Click += (_, _) => win.Close();
         await win.ShowDialog(owner);
         return changed;
     }
 
-    /// <summary>"Agendar semanas…": which routine applies to which week (Monday). Edits the data directly and calls <paramref name="changed"/>.</summary>
+    /// <summary>L.T("Schedule weeks…"): which routine applies to which week (Monday). Edits the data directly and calls <paramref name="changed"/>.</summary>
     public static async Task Schedule(Window owner, AppData data, Action changed)
     {
         var list = new StackPanel { Spacing = 4 };
         var date = new CalendarDatePicker { SelectedDate = DateTime.Today.AddDays(7) };
         var picker = new ComboBox { MinWidth = 160, DisplayMemberBinding = new Avalonia.Data.Binding("Name"), ItemsSource = data.Routines, SelectedIndex = data.Routines.Count > 0 ? 0 : -1 };
-        var add = Btn("Adicionar", true); var close = Btn("Fechar");
+        var add = Btn(L.T("Add"), true); var close = Btn(L.T("Close"));
         void Rebuild()
         {
             list.Children.Clear();
             foreach (var s in data.Schedules.OrderBy(x => x.WeekStart).ToList())
             {
                 var name = data.Routines.FirstOrDefault(r => r.Id == s.RoutineId)?.Name ?? "?";
-                var rm = Btn("Remover");
+                var rm = Btn(L.T("Remove"));
                 var sc = s;
                 rm.Click += (_, _) => { data.Schedules.Remove(sc); changed(); Rebuild(); };
                 var row = new DockPanel { LastChildFill = true };
                 row.Children.Add(Docked(rm, Dock.Right));
-                row.Children.Add(new TextBlock { Text = $"Semana de {s.WeekStart:dd/MM/yyyy}  →  {name}", VerticalAlignment = VerticalAlignment.Center });
+                row.Children.Add(new TextBlock { Text = L.F("Week of {0:dd/MM/yyyy}  →  {1}", s.WeekStart, name), VerticalAlignment = VerticalAlignment.Center });
                 list.Children.Add(row);
             }
             if (list.Children.Count == 0)
-                list.Children.Add(new TextBlock { Text = "Nenhuma semana agendada.", Foreground = Dim });
+                list.Children.Add(new TextBlock { Text = L.T("No weeks scheduled."), Foreground = Dim });
         }
         Rebuild();
         add.Click += (_, _) =>
@@ -122,12 +122,12 @@ static class RoutineDialogs
             data.Schedules.Add(new RoutineSchedule { WeekStart = wk, RoutineId = r.Id });
             changed(); Rebuild();
         };
-        var win = Shell("Agendar semanas", 520, 420, new DockPanel
+        var win = Shell(L.T("Schedule weeks"), 520, 420, new DockPanel
         {
             Margin = new Thickness(16), LastChildFill = true,
             Children =
             {
-                Docked(new TextBlock { Text = "A semana (começa na segunda) usa a rotina escolhida.", Foreground = Dim, Margin = new Thickness(0, 0, 0, 8) }, Dock.Top),
+                Docked(new TextBlock { Text = L.T("The week (starts on Monday) uses the chosen routine."), Foreground = Dim, Margin = new Thickness(0, 0, 0, 8) }, Dock.Top),
                 Docked(close, Dock.Bottom),
                 Docked(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 8, 0, 8), Children = { date, picker, add } }, Dock.Bottom),
                 new ScrollViewer { Content = list },

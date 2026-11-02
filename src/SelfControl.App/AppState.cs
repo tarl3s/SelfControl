@@ -61,7 +61,7 @@ public sealed class AppState : IDisposable
         _today = DateOnly.FromDateTime(_lastCheck);
         if (firstRun && Data.Home.Count == 0)
         {
-            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.Text, Text = "Bem-vindo" });
+            Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.Text, Text = L.T("Welcome") });
             Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.TodayRoutine });
             Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.TodayTasks });
         }
@@ -154,8 +154,8 @@ public sealed class AppState : IDisposable
             ReplaceData(data); SaveNow();
             return null;
         }
-        catch (InvalidDataException) { return "Arquivo inválido"; }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return "Não foi possível ler o arquivo"; }
+        catch (InvalidDataException) { return L.T("Invalid file"); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return L.T("Could not read the file"); }
     }
 
     public bool IsLocked => TaskRules.IsLocked(Data, DateOnly.FromDateTime(_now()));
@@ -231,7 +231,7 @@ public sealed class AppState : IDisposable
         WarningDismissed?.Invoke(exe);
     }
 
-    /// <summary>"Fechar": kills the blocked app and forgets it, so reopening warns again.</summary>
+    /// <summary>L.T("Close"): kills the blocked app and forgets it, so reopening warns again.</summary>
     public void CloseApp(string exe)
     {
         try { _blocker.Kill(exe); } catch (Exception) { }

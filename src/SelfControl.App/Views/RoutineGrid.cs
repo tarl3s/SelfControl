@@ -83,7 +83,7 @@ public class RoutineGrid : Control
         {
             if (e.ClickCount > 1) return;
             var nb = RoutineOps.Create(DayOfColumn(ColumnAt(p.X, Bounds.Width)), MinuteAt(p.Y));
-            nb.Title = "Nova atividade";
+            nb.Title = L.T("New activity");
             _routine.Blocks.Add(nb);
             Selected = nb;
             InvalidateVisual();

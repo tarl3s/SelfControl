@@ -21,6 +21,12 @@ public partial class MainWindow : Window
     {
         AvaloniaXamlLoader.Load(this);
         _state = state;
+        this.FindControl<TextBlock>("LoadFailedText")!.Text = L.T("Could not read your data — changes will not be saved");
+        this.FindControl<Button>("Gear")!.Content = L.T("⚙ Settings");
+        this.FindControl<ListBoxItem>("NavHome")!.Content = L.T("Home");
+        this.FindControl<ListBoxItem>("NavRoutine")!.Content = L.T("Routine");
+        this.FindControl<ListBoxItem>("NavEvents")!.Content = L.T("Events");
+        this.FindControl<ListBoxItem>("NavTasks")!.Content = L.T("Tasks");
         _views = new Control[] { new HomeView(state), new RoutineView(state), new EventsView(state), new TasksView(state) };
         _nav = this.FindControl<ListBox>("Nav")!;
         _host = this.FindControl<ContentControl>("Host")!;

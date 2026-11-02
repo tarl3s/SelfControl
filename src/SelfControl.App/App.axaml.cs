@@ -32,6 +32,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && StateFactory != null)
         {
             var state = State = StateFactory();
+            L.Set(state.Data.Language);   // before any window, so every text is built in the chosen language
             StateReady?.Invoke(state);
             _desktop = desktop;
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -51,9 +52,9 @@ public partial class App : Application
     void SetupTray()
     {
         var menu = new NativeMenu();
-        var open = new NativeMenuItem("Abrir");
+        var open = new NativeMenuItem(L.T("Open"));
         open.Click += (_, _) => Show();
-        var exit = new NativeMenuItem("Sair");
+        var exit = new NativeMenuItem(L.T("Quit"));
         exit.Click += (_, _) => Quit();
         menu.Items.Add(open);
         menu.Items.Add(exit);

@@ -67,8 +67,8 @@ public class HomeView : UserControl
         if (TopLevel.GetTopLevel(this) is not { } top) return;
         var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Escolha a imagem", AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("Imagens") { Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp" } } },
+            Title = L.T("Choose the image"), AllowMultiple = false,
+            FileTypeFilter = new[] { new FilePickerFileType(L.T("Images")) { Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp" } } },
         });
         if (files.Count == 0) return;
         try
@@ -81,20 +81,20 @@ public class HomeView : UserControl
             _notice = null;
             Changed();
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _notice = "Não foi possível copiar a imagem"; Rebuild(); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _notice = L.T("Could not copy the image"); Rebuild(); }
     }
 
     Button AddButton()
     {
-        var b = RoutineDialogs.Btn("＋ Bloco", true);
+        var b = RoutineDialogs.Btn(L.T("＋ Block"), true);
         var menu = new ContextMenu();
         void Item(string text, Action a) { var m = new MenuItem { Header = text }; m.Click += (_, _) => a(); menu.Items.Add(m); }
-        Item("Texto", () => AddBlock(HomeBlockKind.Text));
-        Item("Imagem", AddImage);
-        Item("Rotina de hoje", () => AddBlock(HomeBlockKind.TodayRoutine));
-        Item("Próximos eventos", () => AddBlock(HomeBlockKind.NextEvents));
-        Item("Tarefas de hoje", () => AddBlock(HomeBlockKind.TodayTasks));
-        Item("Status do bloqueio", () => AddBlock(HomeBlockKind.LockStatus));
+        Item(L.T("Text"), () => AddBlock(HomeBlockKind.Text));
+        Item(L.T("Image"), AddImage);
+        Item(L.T("Today's routine"), () => AddBlock(HomeBlockKind.TodayRoutine));
+        Item(L.T("Upcoming events"), () => AddBlock(HomeBlockKind.NextEvents));
+        Item(L.T("Today's tasks"), () => AddBlock(HomeBlockKind.TodayTasks));
+        Item(L.T("Lock status"), () => AddBlock(HomeBlockKind.LockStatus));
         b.Click += (_, _) => menu.Open(b);
         return b;
     }
@@ -105,7 +105,7 @@ public class HomeView : UserControl
         if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox tb && _panel.IsVisualAncestorOf(tb)) return;
         _panel.Children.Clear();
         _panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children =
-            { new TextBlock { Text = "Início", FontSize = 24, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center }, AddButton(),
+            { new TextBlock { Text = L.T("Home"), FontSize = 24, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center }, AddButton(),
               new TextBlock { Text = _notice, IsVisible = _notice != null, VerticalAlignment = VerticalAlignment.Center } } });
         var blocks = Data.Home.ToList();
         for (int i = 0; i < blocks.Count; i++) _panel.Children.Add(Wrap(blocks[i], i, blocks.Count));
@@ -119,7 +119,7 @@ public class HomeView : UserControl
         down.Click += (_, _) => Move(index, 1);
         var more = RoutineDialogs.Btn("⋯");
         var menu = new ContextMenu();
-        var del = new MenuItem { Header = "Excluir" };
+        var del = new MenuItem { Header = L.T("Delete") };
         del.Click += (_, _) => { Data.Home.Remove(block); Changed(); };
         menu.Items.Add(del);
         more.Click += (_, _) => menu.Open(more);
@@ -142,7 +142,7 @@ public class HomeView : UserControl
 
     Control TextBody(HomeBlock block)
     {
-        var box = new TextBox { Text = block.Text ?? "", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Watermark = "Escreva aqui…", Background = Brushes.Transparent, BorderThickness = new Thickness(0) };
+        var box = new TextBox { Text = block.Text ?? "", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Watermark = L.T("Write here…"), Background = Brushes.Transparent, BorderThickness = new Thickness(0) };
         box.TextChanged += (_, _) => { block.Text = box.Text; _state?.Save(); };
         return box;
     }
@@ -159,19 +159,19 @@ public class HomeView : UserControl
                 return new Image { Source = new Bitmap(path), MaxHeight = 320, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
         }
         catch (Exception) { }
-        return new TextBlock { Text = "Imagem não encontrada", Foreground = Dim };
+        return new TextBlock { Text = L.T("Image not found"), Foreground = Dim };
     }
 
     static string Hm(int min) => $"{min / 60:00}:{min % 60:00}";
 
     Control RoutineBody()
     {
-        var s = Section("Rotina de hoje");
+        var s = Section(L.T("Today's routine"));
         var now = Now;
         var nowMin = now.Hour * 60 + now.Minute;
         var blocks = RoutineResolver.For(Data, DateOnly.FromDateTime(now))?.Blocks
             .Where(b => b.Day == now.DayOfWeek).OrderBy(b => b.StartMin).ToList();
-        if (blocks == null || blocks.Count == 0) { s.Children.Add(new TextBlock { Text = "Nada na rotina hoje.", Foreground = Dim }); return s; }
+        if (blocks == null || blocks.Count == 0) { s.Children.Add(new TextBlock { Text = L.T("Nothing in the routine today."), Foreground = Dim }); return s; }
         foreach (var b in blocks)
         {
             var current = nowMin >= b.StartMin && nowMin < b.EndMin;
@@ -186,17 +186,17 @@ public class HomeView : UserControl
 
     Control EventsBody()
     {
-        var s = Section("Próximos eventos");
+        var s = Section(L.T("Upcoming events"));
         var now = Now;
         var today = DateOnly.FromDateTime(now);
         var next = Data.Events.Where(e => e.Enabled)
             .Select(e => (e, at: EventScheduler.NextOccurrence(e, now)))
             .Where(x => x.at != null).OrderBy(x => x.at).Take(3).ToList();
-        if (next.Count == 0) s.Children.Add(new TextBlock { Text = "Nenhum evento.", Foreground = Dim });
+        if (next.Count == 0) s.Children.Add(new TextBlock { Text = L.T("No events."), Foreground = Dim });
         foreach (var (e, at) in next)
         {
             var d = DateOnly.FromDateTime(at!.Value);
-            var day = d == today ? "Hoje" : d == today.AddDays(1) ? "Amanhã" : d.ToString("dd/MM");
+            var day = d == today ? L.T("Today") : d == today.AddDays(1) ? L.T("Tomorrow") : d.ToString("dd/MM");
             s.Children.Add(new TextBlock { Text = $"{day} {at:HH:mm}  {e.Message}" });
         }
         return s;
@@ -204,10 +204,10 @@ public class HomeView : UserControl
 
     Control TasksBody()
     {
-        var s = Section("Tarefas de hoje");
+        var s = Section(L.T("Today's tasks"));
         var today = DateOnly.FromDateTime(Now);
         var tasks = TaskRules.Today(Data, today);
-        if (tasks.Count == 0) s.Children.Add(new TextBlock { Text = "Nenhuma tarefa para hoje.", Foreground = Dim });
+        if (tasks.Count == 0) s.Children.Add(new TextBlock { Text = L.T("No tasks for today."), Foreground = Dim });
         foreach (var t in tasks)
         {
             var task = t;
@@ -220,14 +220,14 @@ public class HomeView : UserControl
 
     Control LockBody()
     {
-        var s = Section("Bloqueio");
+        var s = Section(L.T("Lock"));
         var today = DateOnly.FromDateTime(Now);
         var pending = TaskRules.Today(Data, today).Count(t => !TaskRules.IsDone(t, today));
-        s.Children.Add(new TextBlock { Text = pending > 0 ? $"Bloqueado — {pending} tarefas pendentes" : "Liberado" });
+        s.Children.Add(new TextBlock { Text = pending > 0 ? L.F("Locked — {0} tasks pending", pending) : L.T("Unlocked") });
         if (_state != null)
             foreach (var key in Data.BlockList.Apps.Concat(Data.BlockList.Sites))
                 if (_state.Tracker.Remaining(key) is { } left)
-                    s.Children.Add(new TextBlock { Text = $"{key} — breaktime, {Math.Ceiling(left.TotalMinutes):0} min restantes", Foreground = Dim });
+                    s.Children.Add(new TextBlock { Text = L.F("{0} — breaktime, {1:0} min left", key, Math.Ceiling(left.TotalMinutes)), Foreground = Dim });
         return s;
     }
 }

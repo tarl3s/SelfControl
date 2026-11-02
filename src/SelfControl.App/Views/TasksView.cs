@@ -24,34 +24,34 @@ public class TasksView : UserControl
     public TasksView(AppState? state)
     {
         _state = state;
-        var addTask = RoutineDialogs.Btn("＋ Tarefa", true);
+        var addTask = RoutineDialogs.Btn(L.T("＋ Task"), true);
         addTask.Click += (_, _) => NewTask();
 
         var site = new TextBox { Watermark = "youtube.com", MinWidth = 220 };
-        var addSite = RoutineDialogs.Btn("Adicionar");
+        var addSite = RoutineDialogs.Btn(L.T("Add"));
         void AddSite() { Report(RuleText.TryAddSite(Data.BlockList, site.Text ?? "")); site.Text = ""; Changed(); }
         addSite.Click += (_, _) => AddSite();
         site.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) AddSite(); };
 
-        var addApp = RoutineDialogs.Btn("Escolher programa…");
+        var addApp = RoutineDialogs.Btn(L.T("Choose program…"));
         addApp.IsEnabled = state?.Apps != null;
         addApp.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(this) is not Window w || _state?.Apps is not { } catalog) return;
             if (await AppPickerDialog.Show(w, catalog) is { } app) { Report(RuleText.TryAddProgram(Data.BlockList, app)); Changed(); }
         };
-        var browse = RoutineDialogs.Btn("Procurar .exe…");
+        var browse = RoutineDialogs.Btn(L.T("Browse .exe…"));
         browse.Click += async (_, _) => await Browse();
 
         var left = new StackPanel { Spacing = 8, Children =
         {
-            new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { new TextBlock { Text = "Hoje", FontSize = 20, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center }, addTask } },
+            new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { new TextBlock { Text = L.T("Today"), FontSize = 20, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center }, addTask } },
             _status, _today,
         } };
         var right = new StackPanel { Spacing = 8, Children =
         {
-            new TextBlock { Text = "Lista de bloqueio", FontSize = 20, FontWeight = FontWeight.SemiBold },
-            new TextBlock { Text = "Programas", Foreground = Dim },
+            new TextBlock { Text = L.T("Block list"), FontSize = 20, FontWeight = FontWeight.SemiBold },
+            new TextBlock { Text = L.T("Programs"), Foreground = Dim },
             new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { addApp, browse } },
             _apps,
             new TextBlock { Text = "Sites", Foreground = Dim, Margin = new Thickness(0, 8, 0, 0) },
@@ -86,8 +86,8 @@ public class TasksView : UserControl
         if (TopLevel.GetTopLevel(this) is not { } top) return;
         var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Escolha o programa", AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("Programas") { Patterns = new[] { "*.exe" } } },
+            Title = L.T("Choose the program"), AllowMultiple = false,
+            FileTypeFilter = new[] { new FilePickerFileType(L.T("Programs")) { Patterns = new[] { "*.exe" } } },
         });
         if (files.Count == 0) return;
         Report(RuleText.TryAddApp(Data.BlockList, files[0].Path.LocalPath));
@@ -99,7 +99,7 @@ public class TasksView : UserControl
         var today = Today;
         var tasks = TaskRules.Today(Data, today);
         _today.Children.Clear();
-        if (tasks.Count == 0) _today.Children.Add(new TextBlock { Text = "Nenhuma tarefa para hoje.", Foreground = Dim });
+        if (tasks.Count == 0) _today.Children.Add(new TextBlock { Text = L.T("No tasks for today."), Foreground = Dim });
         foreach (var t in tasks)
         {
             var task = t;
@@ -117,7 +117,7 @@ public class TasksView : UserControl
             row.Children.Add(box);
             _today.Children.Add(row);
         }
-        _status.Text = TaskRules.IsLocked(Data, today) ? "Bloqueado" : "Liberado";
+        _status.Text = TaskRules.IsLocked(Data, today) ? L.T("Locked") : L.T("Unlocked");
 
         FillApps();
         Fill(_sites, Data.BlockList.Sites, s => { Data.BlockList.Sites.Remove(s); Changed(); });
@@ -128,10 +128,10 @@ public class TasksView : UserControl
     {
         _apps.Children.Clear();
         var list = Data.BlockList;
-        if (list.Apps.Count == 0) _apps.Children.Add(new TextBlock { Text = "Nenhum.", Foreground = Dim });
+        if (list.Apps.Count == 0) _apps.Children.Add(new TextBlock { Text = L.T("None."), Foreground = Dim });
         foreach (var (label, exes) in RuleText.AppGroups(list))
         {
-            var x = RoutineDialogs.Btn("Remover");
+            var x = RoutineDialogs.Btn(L.T("Remove"));
             x.Click += (_, _) =>
             {
                 foreach (var e in exes) { list.Apps.Remove(e); list.AppLabels.Remove(e); }
@@ -149,10 +149,10 @@ public class TasksView : UserControl
     static void Fill(StackPanel panel, List<string> items, Action<string> remove)
     {
         panel.Children.Clear();
-        if (items.Count == 0) panel.Children.Add(new TextBlock { Text = "Nenhum.", Foreground = Dim });
+        if (items.Count == 0) panel.Children.Add(new TextBlock { Text = L.T("None."), Foreground = Dim });
         foreach (var item in items.ToList())
         {
-            var x = RoutineDialogs.Btn("Remover");
+            var x = RoutineDialogs.Btn(L.T("Remove"));
             var i = item;
             x.Click += (_, _) => remove(i);
             var row = new DockPanel();
@@ -165,26 +165,26 @@ public class TasksView : UserControl
     async void NewTask()
     {
         if (TopLevel.GetTopLevel(this) is not Window w) return;
-        var title = new TextBox { Watermark = "Tarefa", MinWidth = 300 };
-        var onlyToday = new RadioButton { Content = "Só hoje", IsChecked = true, GroupName = "kind" };
-        var scheduled = new RadioButton { Content = "Agendada", GroupName = "kind" };
+        var title = new TextBox { Watermark = L.T("Task"), MinWidth = 300 };
+        var onlyToday = new RadioButton { Content = L.T("Today only"), IsChecked = true, GroupName = "kind" };
+        var scheduled = new RadioButton { Content = L.T("Scheduled"), GroupName = "kind" };
         var rule = new RuleEditor(DateRule.Weekdays(), null) { IsVisible = false };
         scheduled.IsCheckedChanged += (_, _) => rule.IsVisible = scheduled.IsChecked == true;
-        var save = RoutineDialogs.Btn("Salvar", true); var cancel = RoutineDialogs.Btn("Cancelar");
+        var save = RoutineDialogs.Btn(L.T("Save"), true); var cancel = RoutineDialogs.Btn(L.T("Cancel"));
         var error = new TextBlock { IsVisible = false };
-        var win = RoutineDialogs.Shell("Nova tarefa", 420, 0, new StackPanel
+        var win = RoutineDialogs.Shell(L.T("New task"), 420, 0, new StackPanel
         {
             Margin = new Thickness(16), Spacing = 10,
-            Children = { new TextBlock { Text = "Tarefa" }, title, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { onlyToday, scheduled } }, rule, error,
+            Children = { new TextBlock { Text = L.T("Task") }, title, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { onlyToday, scheduled } }, rule, error,
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Children = { cancel, save } } }
         });
         TaskItem? made = null;
         save.Click += (_, _) =>
         {
-            if (string.IsNullOrWhiteSpace(title.Text)) { error.Text = "Escreva a tarefa"; error.IsVisible = true; return; }
+            if (string.IsNullOrWhiteSpace(title.Text)) { error.Text = L.T("Write the task"); error.IsVisible = true; return; }
             if (scheduled.IsChecked == true)
             {
-                if (rule.Rule is not { } r) { error.Text = "Escolha os dias ou uma data"; error.IsVisible = true; return; }
+                if (rule.Rule is not { } r) { error.Text = L.T("Choose the days or a date"); error.IsVisible = true; return; }
                 made = new TaskItem { Title = title.Text.Trim(), Rule = r };
             }
             else made = new TaskItem { Title = title.Text.Trim(), TempDate = Today };

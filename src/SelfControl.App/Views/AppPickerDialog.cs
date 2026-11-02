@@ -25,10 +25,10 @@ static class AppPickerDialog
     {
         InstalledApp? result = null;
         IReadOnlyList<InstalledApp> all = Array.Empty<InstalledApp>();
-        var search = new TextBox { Watermark = "Pesquisar programas" };
+        var search = new TextBox { Watermark = L.T("Search programs") };
         var list = new ListBox { Background = Brushes.Transparent, ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<InstalledApp?>((a, _) => Row(a)) };
-        var status = new TextBlock { Text = "Carregando programas instalados…", Foreground = Dim };
-        var add = RoutineDialogs.Btn("Adicionar", true); var cancel = RoutineDialogs.Btn("Cancelar");
+        var status = new TextBlock { Text = L.T("Loading installed programs…"), Foreground = Dim };
+        var add = RoutineDialogs.Btn(L.T("Add"), true); var cancel = RoutineDialogs.Btn(L.T("Cancel"));
         add.IsEnabled = false;
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0), Children = { cancel, add } };
         var root = new DockPanel { Margin = new Thickness(16) };
@@ -36,7 +36,7 @@ static class AppPickerDialog
         root.Children.Add(RoutineDialogs.Docked(status, Dock.Top));
         root.Children.Add(RoutineDialogs.Docked(buttons, Dock.Bottom));
         root.Children.Add(list);
-        var win = RoutineDialogs.Shell("Escolher programa", 520, 600, root);
+        var win = RoutineDialogs.Shell(L.T("Choose program"), 520, 600, root);
 
         void Refill() => list.ItemsSource = Filter(all, search.Text).ToList();
         search.TextChanged += (_, _) => Refill();
@@ -48,7 +48,7 @@ static class AppPickerDialog
         {
             search.Focus();
             try { all = await Task.Run(catalog.Installed); } catch { all = Array.Empty<InstalledApp>(); }
-            status.Text = all.Count == 0 ? "Nenhum programa encontrado. Use \"Procurar .exe…\"." : $"{all.Count} programas";
+            status.Text = all.Count == 0 ? L.T("No programs found. Use \"Browse .exe…\".") : L.F("{0} programs", all.Count);
             Refill();
         };
         await win.ShowDialog(owner);

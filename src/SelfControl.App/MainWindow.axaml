@@ -3,16 +3,16 @@
         Background="{DynamicResource Bg0}">
   <DockPanel>
     <Border x:Name="LoadFailedBanner" DockPanel.Dock="Top" Background="#FFFFFF" Padding="12,8" IsVisible="False">
-      <TextBlock Text="Não foi possível ler seus dados — alterações não serão salvas" Foreground="#000000" FontWeight="SemiBold"/>
+      <TextBlock x:Name="LoadFailedText" Foreground="#000000" FontWeight="SemiBold"/>
     </Border>
     <Border DockPanel.Dock="Left" Width="200" Background="{DynamicResource Bg1}">
       <DockPanel>
-      <Button x:Name="Gear" DockPanel.Dock="Bottom" Content="⚙ Configurações" Margin="8" HorizontalAlignment="Stretch"/>
+      <Button x:Name="Gear" DockPanel.Dock="Bottom" Margin="8" HorizontalAlignment="Stretch"/>
       <ListBox x:Name="Nav" Background="Transparent" Margin="8" SelectedIndex="0">
-        <ListBoxItem Content="Início"/>
-        <ListBoxItem Content="Rotina"/>
-        <ListBoxItem Content="Eventos"/>
-        <ListBoxItem Content="Tarefas"/>
+        <ListBoxItem x:Name="NavHome"/>
+        <ListBoxItem x:Name="NavRoutine"/>
+        <ListBoxItem x:Name="NavEvents"/>
+        <ListBoxItem x:Name="NavTasks"/>
       </ListBox>
       </DockPanel>
     </Border>

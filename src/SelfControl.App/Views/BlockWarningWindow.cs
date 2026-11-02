@@ -13,8 +13,8 @@ namespace SelfControl.App.Views;
 /// </summary>
 public sealed class BlockWarningWindow : Window
 {
-    public const string FirstText = "Termine suas tarefas antes de abrir";
-    public const string ExpiredText = "Breaktime acabou, volte às tarefas";
+    public static string FirstText => L.T("Finish your tasks before opening");
+    public static string ExpiredText => L.T("Breaktime is over, back to your tasks");
     public static readonly int[] Minutes = { 5, 10, 15, 20, 30, 45, 60 };
 
     readonly AppState _state;
@@ -28,7 +28,7 @@ public sealed class BlockWarningWindow : Window
     public IReadOnlyList<int> MinuteOptions => Minutes;
     public ComboBox MinutesBox { get; } = new() { ItemsSource = Minutes, SelectedIndex = 1, MinWidth = 90 };
     public Button BreakButton { get; } = new() { Content = "Breaktime", Padding = new Thickness(18, 8) };
-    public Button CloseButton { get; } = new() { Content = "Fechar", Padding = new Thickness(18, 8) };
+    public Button CloseButton { get; } = new() { Content = L.T("Close"), Padding = new Thickness(18, 8) };
 
     public BlockWarningWindow(AppState state, string exe, BlockPhase phase)
     {
@@ -49,7 +49,7 @@ public sealed class BlockWarningWindow : Window
             foreach (var t in PendingTitles)
                 panel.Children.Add(new TextBlock { Text = "•  " + t, FontSize = 16 });
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 12, 0, 0) };
-            row.Children.Add(new TextBlock { Text = "Minutos", VerticalAlignment = VerticalAlignment.Center });
+            row.Children.Add(new TextBlock { Text = L.T("Minutes"), VerticalAlignment = VerticalAlignment.Center });
             row.Children.Add(MinutesBox);
             BreakButton.Classes.Add("primary");
             row.Children.Add(BreakButton);

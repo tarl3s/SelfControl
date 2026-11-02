@@ -85,4 +85,6 @@ public class AppData
     public List<HomeBlock> Home { get; set; } = new();
     /// <summary>Suggest stretches / eye exercises after every hour the computer is in use.</summary>
     public bool BreakReminders { get; set; } = true;
+    /// <summary>"en", "pt-BR", or null to follow the Windows language.</summary>
+    public string? Language { get; set; }
 }

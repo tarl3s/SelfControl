@@ -18,10 +18,10 @@ public class EventsView : UserControl
     public EventsView(AppState? state)
     {
         _state = state;
-        var add = RoutineDialogs.Btn("＋ Novo evento", true);
+        var add = RoutineDialogs.Btn(L.T("＋ New event"), true);
         add.Click += (_, _) => Edit(null);
         var root = new DockPanel { Margin = new Thickness(24) };
-        root.Children.Add(RoutineDialogs.Docked(new TextBlock { Text = "Eventos", FontSize = 24, FontWeight = FontWeight.SemiBold }, Dock.Top));
+        root.Children.Add(RoutineDialogs.Docked(new TextBlock { Text = L.T("Events"), FontSize = 24, FontWeight = FontWeight.SemiBold }, Dock.Top));
         root.Children.Add(RoutineDialogs.Docked(new StackPanel { Margin = new Thickness(0, 12), Children = { add }, HorizontalAlignment = HorizontalAlignment.Left }, Dock.Top));
         root.Children.Add(new ScrollViewer { Content = _list });
         Content = root;
@@ -38,14 +38,14 @@ public class EventsView : UserControl
     {
         _list.Children.Clear();
         if (Data.Events.Count == 0)
-            _list.Children.Add(new TextBlock { Text = "Nenhum evento. Crie um lembrete com hora e dias.", Foreground = new SolidColorBrush(Color.Parse("#9A9A9A")) });
+            _list.Children.Add(new TextBlock { Text = L.T("No events. Create a reminder with a time and days."), Foreground = new SolidColorBrush(Color.Parse("#9A9A9A")) });
         foreach (var ev in Data.Events.OrderBy(e => e.Time).ToList())
         {
             var e = ev;
             var on = new ToggleSwitch { IsChecked = e.Enabled, OnContent = "", OffContent = "" };
             on.IsCheckedChanged += (_, _) => { e.Enabled = on.IsChecked == true; _state?.DataChanged(); };
-            var edit = RoutineDialogs.Btn("Editar"); edit.Click += (_, _) => Edit(e);
-            var del = RoutineDialogs.Btn("Excluir");
+            var edit = RoutineDialogs.Btn(L.T("Edit")); edit.Click += (_, _) => Edit(e);
+            var del = RoutineDialogs.Btn(L.T("Delete"));
             del.Click += (_, _) => { Data.Events.Remove(e); Changed(); };
             var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children =
             {
@@ -65,20 +65,20 @@ public class EventsView : UserControl
         if (TopLevel.GetTopLevel(this) is not Window w) return;
         var isNew = ev == null;
         ev ??= new ReminderEvent { Time = new TimeOnly(9, 0) };
-        var msg = new TextBox { Text = ev.Message, MinWidth = 300, Watermark = "Mensagem" };
+        var msg = new TextBox { Text = ev.Message, MinWidth = 300, Watermark = L.T("Message") };
         var rule = new RuleEditor(ev.Rule, ev.Time);
-        var save = RoutineDialogs.Btn("Salvar", true); var cancel = RoutineDialogs.Btn("Cancelar");
+        var save = RoutineDialogs.Btn(L.T("Save"), true); var cancel = RoutineDialogs.Btn(L.T("Cancel"));
         var error = new TextBlock { IsVisible = false };
-        var win = RoutineDialogs.Shell(isNew ? "Novo evento" : "Editar evento", 420, 0, new StackPanel
+        var win = RoutineDialogs.Shell(isNew ? L.T("New event") : L.T("Edit event"), 420, 0, new StackPanel
         {
             Margin = new Thickness(16), Spacing = 10,
-            Children = { new TextBlock { Text = "Mensagem" }, msg, rule, error, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Children = { cancel, save } } }
+            Children = { new TextBlock { Text = L.T("Message") }, msg, rule, error, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Children = { cancel, save } } }
         });
         bool ok = false;
         save.Click += (_, _) =>
         {
-            if (string.IsNullOrWhiteSpace(msg.Text)) { error.Text = "Escreva a mensagem"; error.IsVisible = true; return; }
-            if (rule.Rule is not { } r) { error.Text = "Escolha os dias ou uma data"; error.IsVisible = true; return; }
+            if (string.IsNullOrWhiteSpace(msg.Text)) { error.Text = L.T("Write the message"); error.IsVisible = true; return; }
+            if (rule.Rule is not { } r) { error.Text = L.T("Choose the days or a date"); error.IsVisible = true; return; }
             ev.Message = msg.Text.Trim(); ev.Rule = r; ev.Time = rule.Time; ok = true; win.Close();
         };
         cancel.Click += (_, _) => win.Close();

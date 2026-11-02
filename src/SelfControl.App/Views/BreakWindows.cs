@@ -15,13 +15,13 @@ public static class BreakWindows
     static readonly IBrush Dim = new SolidColorBrush(Color.Parse("#9A9A9A"));
     static Window? _prompt;
 
-    /// <summary>"Hora de uma pausa" in the bottom-right corner, on top but not stealing the whole screen.</summary>
+    /// <summary>L.T("Time for a break") in the bottom-right corner, on top but not stealing the whole screen.</summary>
     public static void ShowPrompt()
     {
         if (_prompt != null) return;
-        var stretch = RoutineDialogs.Btn("Alongamento", true);
-        var eyes = RoutineDialogs.Btn("Olhos", true);
-        var later = RoutineDialogs.Btn("Agora não");
+        var stretch = RoutineDialogs.Btn(L.T("Stretch"), true);
+        var eyes = RoutineDialogs.Btn(L.T("Eyes"), true);
+        var later = RoutineDialogs.Btn(L.T("Not now"));
         var win = new Window
         {
             Title = "SelfControl", Width = 360, SizeToContent = SizeToContent.Height, CanResize = false, Topmost = true,
@@ -31,8 +31,8 @@ public static class BreakWindows
                 Margin = new Thickness(18), Spacing = 10,
                 Children =
                 {
-                    new TextBlock { Text = "Hora de uma pausa", FontSize = 18, FontWeight = FontWeight.SemiBold },
-                    new TextBlock { Text = "Você está no computador há uma hora. Que tal alongar ou descansar os olhos por um minuto?", TextWrapping = TextWrapping.Wrap, Foreground = Dim },
+                    new TextBlock { Text = L.T("Time for a break"), FontSize = 18, FontWeight = FontWeight.SemiBold },
+                    new TextBlock { Text = L.T("You've been at the computer for an hour. How about stretching or resting your eyes for a minute?"), TextWrapping = TextWrapping.Wrap, Foreground = Dim },
                     new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { stretch, eyes, later } },
                 },
             },
@@ -55,7 +55,7 @@ public static class BreakWindows
 
     static Window FullScreen(string title, Control content)
     {
-        var close = RoutineDialogs.Btn("Fechar");
+        var close = RoutineDialogs.Btn(L.T("Close"));
         var root = new Grid();
         root.Children.Add(content);
         close.HorizontalAlignment = HorizontalAlignment.Right; close.VerticalAlignment = VerticalAlignment.Top; close.Margin = new Thickness(24);
@@ -74,9 +74,9 @@ public static class BreakWindows
         var text = new TextBlock { FontSize = 22, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, MaxWidth = 700, HorizontalAlignment = HorizontalAlignment.Center };
         var count = new TextBlock { FontSize = 72, FontWeight = FontWeight.Light, HorizontalAlignment = HorizontalAlignment.Center };
         var progress = new TextBlock { Foreground = Dim, HorizontalAlignment = HorizontalAlignment.Center };
-        var next = RoutineDialogs.Btn("Pular"); next.HorizontalAlignment = HorizontalAlignment.Center;
+        var next = RoutineDialogs.Btn(L.T("Skip")); next.HorizontalAlignment = HorizontalAlignment.Center;
         var panel = new StackPanel { Spacing = 18, VerticalAlignment = VerticalAlignment.Center, Children = { progress, title, text, count, next } };
-        var win = FullScreen("Alongamento", panel);
+        var win = FullScreen(L.T("Stretch"), panel);
         int i = -1, left = 0;
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         void Go(int to)
@@ -85,11 +85,11 @@ public static class BreakWindows
             if (i >= steps.Count)
             {
                 timer.Stop();
-                progress.Text = ""; title.Text = "Pronto!"; text.Text = "Bom trabalho. Pode voltar ao que estava fazendo."; count.Text = ""; next.IsVisible = false;
+                progress.Text = ""; title.Text = L.T("Done!"); text.Text = L.T("Good work. You can get back to what you were doing."); count.Text = ""; next.IsVisible = false;
                 return;
             }
             left = steps[i].Seconds;
-            progress.Text = $"{i + 1} de {steps.Count}"; title.Text = steps[i].Title; text.Text = steps[i].Text; count.Text = left.ToString();
+            progress.Text = L.F("{0} of {1}", i + 1, steps.Count); title.Text = L.T(steps[i].Title); text.Text = L.T(steps[i].Text); count.Text = left.ToString();
         }
         timer.Tick += (_, _) => { if (--left <= 0) Go(i + 1); else count.Text = left.ToString(); };
         next.Click += (_, _) => Go(i + 1);
@@ -102,13 +102,13 @@ public static class BreakWindows
     /// <summary>Phases of the eye exercise: (instruction, seconds).</summary>
     internal static readonly (string Text, int Seconds)[] EyePhases =
     {
-        ("Siga a bolinha só com os olhos, sem mexer a cabeça", 12),   // left ↔ right
-        ("Agora para cima e para baixo", 12),
-        ("Na diagonal", 12),
-        ("Em círculos", 14),
-        ("Ela vai se aproximar e se afastar: mantenha o foco nela", 14),
-        ("Feche os olhos e respire fundo", 8),
-        ("Olhe para algo longe, a uns 6 metros, por 20 segundos", 20),
+        ("Follow the ball with your eyes only, without moving your head", 12),   // left ↔ right
+        ("Now up and down", 12),
+        ("Diagonally", 12),
+        ("In circles", 14),
+        ("It will come closer and move away: keep your focus on it", 14),
+        ("Close your eyes and breathe deeply", 8),
+        ("Look at something far away, about 6 meters (20 ft), for 20 seconds", 20),
     };
 
     /// <summary>Where the ball is at time t (seconds into a phase), as fractions of the area, plus its radius scale.</summary>
@@ -135,17 +135,17 @@ public static class BreakWindows
         var root = new DockPanel();
         root.Children.Add(RoutineDialogs.Docked(label, Dock.Top));
         root.Children.Add(canvas);
-        var win = FullScreen("Treino dos olhos", root);
+        var win = FullScreen(L.T("Eye exercise"), root);
         int phase = 0; var started = DateTime.Now;
-        label.Text = EyePhases[0].Text;
+        label.Text = L.T(EyePhases[0].Text);
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         timer.Tick += (_, _) =>
         {
             var t = (DateTime.Now - started).TotalSeconds;
             if (t >= EyePhases[phase].Seconds)
             {
-                if (++phase >= EyePhases.Length) { timer.Stop(); label.Text = "Pronto! Seus olhos agradecem."; ball.IsVisible = false; return; }
-                started = DateTime.Now; t = 0; label.Text = EyePhases[phase].Text;
+                if (++phase >= EyePhases.Length) { timer.Stop(); label.Text = L.T("Done! Your eyes thank you."); ball.IsVisible = false; return; }
+                started = DateTime.Now; t = 0; label.Text = L.T(EyePhases[phase].Text);
             }
             var (x, y, s) = EyeBall(phase, t);
             var size = 28 * s;
