@@ -29,6 +29,8 @@ public sealed class WindowsBlocker : IBlocker, IDisposable
         }
     }
 
+    public IReadOnlyCollection<string> Running { get { lock (_gate) return _running.ToArray(); } }
+
     public void Kill(string exe)
     {
         var name = BlockRules.NormalizeApp(exe);

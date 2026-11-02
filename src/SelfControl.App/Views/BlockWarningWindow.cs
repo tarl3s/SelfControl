@@ -102,7 +102,8 @@ public sealed class BlockWarningWindow : Window
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        if (!_dismissed) e.Cancel = true; // Alt+F4 does not get past the warning
+        if (!_dismissed && e.CloseReason is not (WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown))
+            e.Cancel = true; // Alt+F4 does not get past the warning, but logoff/exit must work
         base.OnClosing(e);
     }
 }

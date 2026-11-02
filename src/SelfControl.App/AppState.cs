@@ -19,6 +19,8 @@ public sealed class AppState : IDisposable
     readonly DispatcherTimer _tickTimer;
     DateTime _lastCheck;
     DateOnly _today;
+    bool _wasLocked;
+    readonly HashSet<string> _retryClose = new(StringComparer.OrdinalIgnoreCase);
 
     public AppData Data { get; private set; }
     public BreaktimeTracker Tracker { get; }
@@ -67,6 +69,7 @@ public sealed class AppState : IDisposable
         _blocker.AppSeen += exe => OnUiAsync(() => OnAppSeen(exe));
         _blocker.AppClosed += exe => OnUiAsync(() => AppGone(exe));
         RefreshWatched();
+        _wasLocked = IsLocked;
         _tickTimer.Start();
     }
 
@@ -124,10 +127,18 @@ public sealed class AppState : IDisposable
     /// <summary>When nothing is locked any more, forget breaks/warnings so a later relock starts fresh.</summary>
     public void RefreshLock()
     {
-        if (IsLocked) return;
+        var locked = IsLocked;
+        var was = _wasLocked;
+        _wasLocked = locked;
+        if (locked)
+        {
+            // Lock came back (midnight, task added/unchecked, break ended): apps already running need their warning.
+            if (!was) foreach (var exe in _blocker.Running.ToList()) OnAppSeen(exe);
+            return;
+        }
         Tracker.Clear();
-        _breaking.Clear(); _breakTimer.Stop();
-        LockLifted?.Invoke();
+        _breaking.Clear(); _breakTimer.Stop(); _retryClose.Clear();
+        if (was) LockLifted?.Invoke();
     }
 
     void RefreshWatched() => _blocker.SetWatched(Data.BlockList.Apps.Where(BlockRules.CanBlockApp));
@@ -135,6 +146,7 @@ public sealed class AppState : IDisposable
     void OnAppSeen(string exe)
     {
         _running.Add(exe);
+        if (IsLocked) _wasLocked = true; // a warning may be open even if nobody re-evaluated the lock yet
         var phase = Tracker.OnSeen(exe, IsLocked);
         if (phase is BlockPhase.Warning or BlockPhase.Expired) AppBlocked?.Invoke(exe, phase);
     }
@@ -150,14 +162,25 @@ public sealed class AppState : IDisposable
         catch (Exception) { /* a toast failure must not crash the app */ }
         _lastCheck = now;
         RefreshWatched();
-        RefreshLock();
         var today = DateOnly.FromDateTime(now);
-        if (today != _today) { _today = today; ViewsChanged?.Invoke(); }
+        var newDay = today != _today;
+        _today = today;
+        RefreshLock();
+        if (IsLocked && _retryClose.Count > 0)
+        {
+            var still = _blocker.Running;
+            foreach (var exe in _retryClose.ToList())
+            {
+                _retryClose.Remove(exe);
+                if (still.Contains(exe, StringComparer.OrdinalIgnoreCase)) OnAppSeen(exe); // Kill failed: warn again
+            }
+        }
+        if (newDay) ViewsChanged?.Invoke();
     }
 
     void AppGone(string exe)
     {
-        _running.Remove(exe); _breaking.Remove(exe);
+        _running.Remove(exe); _breaking.Remove(exe); _retryClose.Remove(exe);
         Tracker.OnClosed(exe);
         WarningDismissed?.Invoke(exe);
     }
@@ -175,6 +198,7 @@ public sealed class AppState : IDisposable
     {
         try { _blocker.Kill(exe); } catch (Exception) { }
         AppGone(exe);
+        _retryClose.Add(exe); // if it survived the kill, the next tick warns again
     }
 
     /// <summary>Re-evaluates apps on a break; raises AppBlocked(Expired) once for each whose break ended while it runs.</summary>

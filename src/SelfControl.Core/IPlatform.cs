@@ -6,6 +6,8 @@ public interface IBlocker
     event Action<string> AppClosed;
     void Kill(string exe);
     void SetWatched(IEnumerable<string> exes);
+    /// <summary>Watched executables that are running right now.</summary>
+    IReadOnlyCollection<string> Running => Array.Empty<string>();
 }
 
 public interface INotifier

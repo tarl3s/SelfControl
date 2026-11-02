@@ -82,4 +82,13 @@ chrome.runtime.onMessage.addListener((m, sender) => {
 });
 
 chrome.alarms.create("poll", { periodInMinutes: 0.5 });
-chrome.alarms.onAlarm.addListener((a) => { if (a.name === "poll") serial(() => checkBreaks()); });
+chrome.alarms.onAlarm.addListener((a) => { if (a.name === "poll") serial(async () => { await checkBreaks(); await scanTabs(); }); });
+
+// An already-open blocked site gets its warning too: evaluate http(s) tabs the state does not know yet.
+async function scanTabs() {
+  const known = await load();
+  const all = await chrome.tabs.query({});
+  for (const t of all) {
+    if (t.id !== undefined && t.url && /^https?:/.test(t.url) && !known[t.id]) await evaluate(t.id, t.url);
+  }
+}

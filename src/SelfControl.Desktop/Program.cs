@@ -23,6 +23,13 @@ internal static class Program
         var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SelfControl");
         var firstRun = !File.Exists(Path.Combine(folder, "data.json"));
 
+        void Log(string kind, Exception? ex)
+        {
+            try { Directory.CreateDirectory(folder); File.AppendAllText(Path.Combine(folder, "error.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{kind}] {ex}{Environment.NewLine}"); } catch { }
+        }
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("domain", e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => { Log("task", e.Exception); e.SetObserved(); };
+
         using var blocker = new WindowsBlocker();
         ExtensionBridge? bridge = null;
         SelfControl.App.App.StartHidden = args.Contains("--tray");
@@ -31,6 +38,7 @@ internal static class Program
             new AppState(new DataStore(folder), blocker, new ToastNotifier(), new RegistryAutostart(), firstRun);
         SelfControl.App.App.StateReady += state =>
         {
+            Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => { Log("ui", e.Exception); e.Handled = true; };
             bridge = new ExtensionBridge(
                 h => { var i = state.Check(h); return new BridgeStatus(i.Blocked, i.Phase, i.Tasks, i.Remaining); },
                 state.StartBreak, state.SiteClosed);
