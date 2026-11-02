@@ -49,7 +49,17 @@ static class SettingsDialog
             }
         };
 
-        var win = RoutineDialogs.Shell(L.T("Settings"), 420, 0, new StackPanel
+        Window? shell = null;
+        var check = RoutineDialogs.Btn(L.T("Check for updates"));
+        check.IsEnabled = state.Updater != null;
+        check.Click += async (_, _) =>
+        {
+            if (state.Updater is not { } updater) return;
+            check.IsEnabled = false;
+            try { if (!await UpdateDialog.CheckNow(shell!, updater)) Say(L.T("You're on the latest version")); }
+            finally { check.IsEnabled = true; }
+        };
+        var win = shell = RoutineDialogs.Shell(L.T("Settings"), 420, 0, new StackPanel
         {
             Margin = new Thickness(16), Spacing = 12,
             Children = { new TextBlock { Text = L.T("Settings"), FontSize = 20, FontWeight = FontWeight.SemiBold },
@@ -57,6 +67,7 @@ static class SettingsDialog
                 breaks,
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = "Idioma / Language", VerticalAlignment = VerticalAlignment.Center }, language } },
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { export, import } },
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L.F("Version {0}", state.Updater?.CurrentVersion ?? "-"), VerticalAlignment = VerticalAlignment.Center }, check } },
                 message,
                 new StackPanel { HorizontalAlignment = HorizontalAlignment.Right, Children = { close } } }
         });

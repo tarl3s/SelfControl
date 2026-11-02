@@ -30,6 +30,8 @@ public sealed class AppState : IDisposable
     public IAutostart Autostart { get; }
     /// <summary>Installed programs for the block-list picker (null where the platform has none, e.g. tests).</summary>
     public IAppCatalog? Apps { get; init; }
+    /// <summary>Checks GitHub for a newer version (null in tests / dev).</summary>
+    public IUpdater? Updater { get; init; }
     public bool LoadFailed => _store.LoadFailed;
     /// <summary>Where Início copies chosen pictures (same base folder as data.json).</summary>
     public string ImagesFolder => Path.Combine(_store.Folder, "images");

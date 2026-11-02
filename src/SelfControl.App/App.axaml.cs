@@ -45,6 +45,7 @@ public partial class App : Application
             state.BreakDue += Views.BreakWindows.ShowPrompt;
             desktop.Exit += (_, _) => warnings.Dispose();
             desktop.Exit += (_, _) => state.Dispose();
+            CheckForUpdatesLoop(state);
         }
         base.OnFrameworkInitializationCompleted();
     }
@@ -75,6 +76,29 @@ public partial class App : Application
             if (_window.WindowState == WindowState.Minimized) _window.WindowState = WindowState.Normal;
             _window.Activate();
         });
+    }
+
+    /// <summary>Quits like the tray's Quit (data saved first).</summary>
+    public static void QuitApp() => Dispatcher.UIThread.Post(() => (Current as App)?.Quit());
+
+    async void CheckForUpdatesLoop(AppState state)
+    {
+        if (state.Updater is not { } updater) return;
+        await Task.Delay(TimeSpan.FromSeconds(10));
+        while (true)
+        {
+            try
+            {
+                var u = await updater.CheckAsync();
+                if (u != null && !Views.UpdateDialog.IsPostponed(u) && _window != null)
+                {
+                    _window.Show();
+                    await Views.UpdateDialog.Show(_window, updater, u);
+                }
+            }
+            catch (Exception) { }
+            await Task.Delay(TimeSpan.FromHours(6));
+        }
     }
 
     void Quit()
