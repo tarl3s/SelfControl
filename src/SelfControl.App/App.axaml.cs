@@ -1,3 +1,4 @@
+using Avalonia.Platform;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -35,6 +36,7 @@ public partial class App : Application
             _desktop = desktop;
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             _window = new MainWindow(state);
+            _window.Icon = MakeIcon();
             desktop.MainWindow = _window;
             if (!StartHidden) _window.Show();
             SetupTray();
@@ -59,19 +61,8 @@ public partial class App : Application
         TrayIcon.SetIcons(this, new TrayIcons { tray });
     }
 
-    static WindowIcon MakeIcon()
-    {
-        var bmp = new RenderTargetBitmap(new PixelSize(32, 32));
-        using (var ctx = bmp.CreateDrawingContext())
-        {
-            ctx.DrawRectangle(Brushes.White, null, new Rect(0, 0, 32, 32), 6, 6);
-            ctx.DrawEllipse(Brushes.Black, null, new Point(16, 16), 8, 8);
-        }
-        using var ms = new MemoryStream();
-        bmp.Save(ms);
-        ms.Position = 0;
-        return new WindowIcon(ms);
-    }
+    /// <summary>The white brain on black (Assets/SelfControl.ico, drawn by tools/Make-Icon.ps1).</summary>
+    static WindowIcon MakeIcon() => new(AssetLoader.Open(new Uri("avares://SelfControl.App/Assets/SelfControl.ico")));
 
     public void Show()
     {

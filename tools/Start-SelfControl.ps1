@@ -16,7 +16,7 @@ function Test-Stale {
     if ($Force -or -not (Test-Path $exe)) { return $true }
     $built = (Get-Item $exe).LastWriteTime
     $newer = Get-ChildItem (Join-Path $root 'src') -File -Recurse |
-        Where-Object { $_.Extension -in '.cs', '.axaml', '.csproj' -and $_.FullName -notmatch '\\(bin|obj)\\' -and $_.LastWriteTime -gt $built } |
+        Where-Object { $_.Extension -in '.cs', '.axaml', '.csproj', '.ico' -and $_.FullName -notmatch '\\(bin|obj)\\' -and $_.LastWriteTime -gt $built } |
         Select-Object -First 1
     return $null -ne $newer
 }

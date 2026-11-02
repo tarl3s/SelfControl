@@ -8,4 +8,7 @@
     <ProjectReference Include="..\SelfControl.Core\SelfControl.Core.csproj" />
     <InternalsVisibleTo Include="SelfControl.UiTests" />
   </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/SelfControl.ico" />
+  </ItemGroup>
 </Project>
