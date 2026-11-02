@@ -181,12 +181,24 @@ public sealed class AppState : IDisposable
 
     void RefreshWatched() => _blocker.SetWatched(Data.BlockList.Apps.Where(BlockRules.CanBlockApp));
 
+    /// <summary>
+    /// The program an exe belongs to ("Steam" for steam.exe and steamwebhelper.exe), or the exe itself when it was added
+    /// alone. Warnings, Breaktime and Close work per program, so a program with several processes shows ONE warning.
+    /// </summary>
+    public string AppKey(string exe) => Data.BlockList.AppLabels.TryGetValue(exe, out var name) ? name : exe;
+
+    IEnumerable<string> ExesOf(string key) =>
+        Data.BlockList.Apps.Where(e => string.Equals(AppKey(e), key, StringComparison.OrdinalIgnoreCase));
+
+    bool AnyRunning(string key) => _running.Any(e => string.Equals(AppKey(e), key, StringComparison.OrdinalIgnoreCase));
+
     void OnAppSeen(string exe)
     {
         _running.Add(exe);
         if (IsLocked) _wasLocked = true; // a warning may be open even if nobody re-evaluated the lock yet
-        var phase = Tracker.OnSeen(exe, IsLocked);
-        if (phase is BlockPhase.Warning or BlockPhase.Expired) AppBlocked?.Invoke(exe, phase);
+        var key = AppKey(exe);
+        var phase = Tracker.OnSeen(key, IsLocked);
+        if (phase is BlockPhase.Warning or BlockPhase.Expired) AppBlocked?.Invoke(key, phase);
     }
 
     public void Tick()
@@ -209,47 +221,60 @@ public sealed class AppState : IDisposable
         if (IsLocked && _retryClose.Count > 0)
         {
             var still = _blocker.Running;
-            foreach (var exe in _retryClose.ToList())
+            foreach (var key in _retryClose.ToList())
             {
-                _retryClose.Remove(exe);
-                if (still.Contains(exe, StringComparer.OrdinalIgnoreCase)) OnAppSeen(exe); // Kill failed: warn again
+                _retryClose.Remove(key);
+                var alive = still.FirstOrDefault(e => string.Equals(AppKey(e), key, StringComparison.OrdinalIgnoreCase));
+                if (alive != null) OnAppSeen(alive); // Kill failed: warn again
             }
         }
         if (newDay) ViewsChanged?.Invoke();
     }
 
+    /// <summary>One process ended; the program counts as closed only when none of its processes is left.</summary>
     void AppGone(string exe)
     {
-        _running.Remove(exe); _breaking.Remove(exe); _retryClose.Remove(exe);
-        Tracker.OnClosed(exe);
-        WarningDismissed?.Invoke(exe);
+        _running.Remove(exe);
+        var key = AppKey(exe);
+        if (!AnyRunning(key)) Forget(key);
     }
 
-    /// <summary>"Breaktime": lets a blocked app run for a while; its warning closes and a 1 s timer watches for the end.</summary>
-    public void StartAppBreak(string exe, int minutes)
+    void Forget(string key)
     {
-        Tracker.StartBreak(exe, minutes);
-        if (Tracker.Remaining(exe) != null) { _breaking.Add(exe); _breakTimer.Start(); }
-        WarningDismissed?.Invoke(exe);
+        _breaking.Remove(key); _retryClose.Remove(key);
+        Tracker.OnClosed(key);
+        WarningDismissed?.Invoke(key);
     }
 
-    /// <summary>L.T("Close"): kills the blocked app and forgets it, so reopening warns again.</summary>
-    public void CloseApp(string exe)
+    /// <summary>"Breaktime": lets a blocked program (all its processes) run for a while; a 1 s timer watches for the end.</summary>
+    public void StartAppBreak(string key, int minutes)
     {
-        try { _blocker.Kill(exe); } catch (Exception) { }
-        AppGone(exe);
-        _retryClose.Add(exe); // if it survived the kill, the next tick warns again
+        Tracker.StartBreak(key, minutes);
+        if (Tracker.Remaining(key) != null) { _breaking.Add(key); _breakTimer.Start(); }
+        WarningDismissed?.Invoke(key);
     }
 
-    /// <summary>Re-evaluates apps on a break; raises AppBlocked(Expired) once for each whose break ended while it runs.</summary>
+    /// <summary>"Close": kills every process of the blocked program and forgets it, so reopening warns again.</summary>
+    public void CloseApp(string key)
+    {
+        foreach (var exe in ExesOf(key).ToList())
+        {
+            try { _blocker.Kill(exe); } catch (Exception) { }
+            _running.Remove(exe);
+        }
+        Forget(key);
+        _retryClose.Add(key); // if it survived the kill, the next tick warns again
+    }
+
+    /// <summary>Re-evaluates programs on a break; raises AppBlocked(Expired) once for each whose break ended while it runs.</summary>
     public void CheckBreaks()
     {
-        foreach (var exe in _breaking.ToList())
+        foreach (var key in _breaking.ToList())
         {
-            if (!_running.Contains(exe)) { _breaking.Remove(exe); continue; }
-            if (Tracker.OnSeen(exe, IsLocked) != BlockPhase.Expired) continue;
-            _breaking.Remove(exe);
-            AppBlocked?.Invoke(exe, BlockPhase.Expired);
+            if (!AnyRunning(key)) { _breaking.Remove(key); continue; }
+            if (Tracker.OnSeen(key, IsLocked) != BlockPhase.Expired) continue;
+            _breaking.Remove(key);
+            AppBlocked?.Invoke(key, BlockPhase.Expired);
         }
         if (_breaking.Count == 0) _breakTimer.Stop();
     }

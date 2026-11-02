@@ -15,6 +15,7 @@ public static partial class L
         ["You've been at the computer for an hour. How about stretching or resting your eyes for a minute?"] = "Você está no computador há uma hora. Que tal alongar ou descansar os olhos por um minuto?",
         ["Stretch"] = "Alongamento",
         ["Eyes"] = "Olhos",
+        ["Both"] = "Os dois",
         ["Not now"] = "Agora não",
         ["Close"] = "Fechar",
         ["Skip"] = "Pular",

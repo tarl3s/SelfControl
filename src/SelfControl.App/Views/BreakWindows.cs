@@ -21,10 +21,11 @@ public static class BreakWindows
         if (_prompt != null) return;
         var stretch = RoutineDialogs.Btn(L.T("Stretch"), true);
         var eyes = RoutineDialogs.Btn(L.T("Eyes"), true);
+        var both = RoutineDialogs.Btn(L.T("Both"), true);
         var later = RoutineDialogs.Btn(L.T("Not now"));
         var win = new Window
         {
-            Title = "SelfControl", Width = 360, SizeToContent = SizeToContent.Height, CanResize = false, Topmost = true,
+            Title = "SelfControl", Width = 440, SizeToContent = SizeToContent.Height, CanResize = false, Topmost = true,
             ShowInTaskbar = false, SystemDecorations = SystemDecorations.BorderOnly, Background = new SolidColorBrush(Color.Parse("#0D0D0D")),
             Content = new StackPanel
             {
@@ -33,7 +34,7 @@ public static class BreakWindows
                 {
                     new TextBlock { Text = L.T("Time for a break"), FontSize = 18, FontWeight = FontWeight.SemiBold },
                     new TextBlock { Text = L.T("You've been at the computer for an hour. How about stretching or resting your eyes for a minute?"), TextWrapping = TextWrapping.Wrap, Foreground = Dim },
-                    new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { stretch, eyes, later } },
+                    new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { stretch, eyes, both, later } },
                 },
             },
         };
@@ -48,6 +49,7 @@ public static class BreakWindows
         win.Closed += (_, _) => _prompt = null;
         stretch.Click += (_, _) => { win.Close(); ShowStretches(); };
         eyes.Click += (_, _) => { win.Close(); ShowEyes(); };
+        both.Click += (_, _) => { win.Close(); ShowStretches(thenEyes: true); };
         later.Click += (_, _) => win.Close();
         _prompt = win;
         win.Show();
@@ -67,7 +69,8 @@ public static class BreakWindows
     }
 
     /// <summary>One stretch at a time with a countdown; moves on by itself.</summary>
-    public static Window ShowStretches()
+    /// <param name="thenEyes">"Both": when the stretches end, the eye exercise opens right after.</param>
+    public static Window ShowStretches(bool thenEyes = false)
     {
         var steps = Exercises.Stretches;
         var title = new TextBlock { FontSize = 40, FontWeight = FontWeight.SemiBold, HorizontalAlignment = HorizontalAlignment.Center };
@@ -85,6 +88,7 @@ public static class BreakWindows
             if (i >= steps.Count)
             {
                 timer.Stop();
+                if (thenEyes) { win.Close(); ShowEyes(); return; }
                 progress.Text = ""; title.Text = L.T("Done!"); text.Text = L.T("Good work. You can get back to what you were doing."); count.Text = ""; next.IsVisible = false;
                 return;
             }

@@ -45,6 +45,28 @@ public class TasksTests
     }
 
     [AvaloniaFact]
+    public void ProgramWithTwoExes_OneWarning_OneBreak_OneClose()
+    {
+        using var r = new Rig();
+        RuleText.TryAddProgram(r.State.Data.BlockList, new InstalledApp("Steam", "Valve", new[] { "steam.exe", "steamwebhelper.exe" }, null));
+        r.Blocker.Seen("steam.exe"); r.Blocker.Seen("steamwebhelper.exe");
+        Assert.Equal(1, r.Manager.OpenCount);                       // one warning for the whole program
+        r.Manager.Get("Steam")!.StartBreak(10);
+        Assert.Equal(0, r.Manager.OpenCount);
+        r.Blocker.Seen("steamwebhelper.exe");                       // a helper restarting during the break: no warning
+        Assert.Equal(0, r.Manager.OpenCount);
+        r.Now = r.Now.AddMinutes(11); r.State.CheckBreaks();
+        Assert.Equal(1, r.Manager.OpenCount);                       // one expired warning
+        r.State.CloseApp("Steam");                                  // what its single Close button does
+        Assert.Equal(new[] { "steam.exe", "steamwebhelper.exe" }, r.Blocker.Killed.Distinct().OrderBy(x => x));
+        Assert.Equal(0, r.Manager.OpenCount);
+        r.Blocker.Closed("steam.exe"); r.Blocker.Closed("steamwebhelper.exe");
+        r.Blocker.Seen("steam.exe");                                // reopened: first warning again
+        Assert.Equal(1, r.Manager.OpenCount);
+        Assert.False(r.Manager.Get("Steam")!.IsExpired);
+    }
+
+    [AvaloniaFact]
     public void CheckingLastTask_Unlocks()
     {
         using var r = new Rig();
