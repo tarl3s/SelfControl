@@ -26,7 +26,7 @@ static class AppPickerDialog
         InstalledApp? result = null;
         IReadOnlyList<InstalledApp> all = Array.Empty<InstalledApp>();
         var search = new TextBox { Watermark = "Pesquisar programas" };
-        var list = new ListBox { Background = Brushes.Transparent, ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<InstalledApp>((a, _) => Row(a)) };
+        var list = new ListBox { Background = Brushes.Transparent, ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<InstalledApp?>((a, _) => Row(a)) };
         var status = new TextBlock { Text = "Carregando programas instalados…", Foreground = Dim };
         var add = RoutineDialogs.Btn("Adicionar", true); var cancel = RoutineDialogs.Btn("Cancelar");
         add.IsEnabled = false;
@@ -55,8 +55,13 @@ static class AppPickerDialog
         return result;
     }
 
-    static Control Row(InstalledApp a)
+    /// <summary>
+    /// One list row. Avalonia calls the template with null while it recycles rows during scrolling; that used to throw
+    /// on every scroll step and made the list freeze.
+    /// </summary>
+    internal static Control Row(InstalledApp? a)
     {
+        if (a == null) return new Panel();
         var icon = new Image { Width = 28, Height = 28, Margin = new Thickness(0, 0, 10, 0) };
         if (a.IconPng != null) { try { icon.Source = new Bitmap(a.IconPng); } catch { } }
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { new TextBlock { Text = a.Name } } };

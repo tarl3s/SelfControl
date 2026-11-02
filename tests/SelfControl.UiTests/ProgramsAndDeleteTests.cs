@@ -48,6 +48,9 @@ public class ProgramsAndDeleteTests
         Assert.Equal(2, groups[0].Exes.Count);
     }
 
+    [AvaloniaFact]
+    public void PickerRow_NullItem_DoesNotThrow() => Assert.NotNull(AppPickerDialog.Row(null));
+
     [Fact]
     public void PickerFilter_MatchesNameOrPublisher()
     {
