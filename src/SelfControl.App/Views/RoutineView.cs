@@ -92,7 +92,7 @@ public class RoutineView : UserControl
     public bool CopySelected()
     {
         if (_grid.Selected is not { } b) return false;
-        _clipboard = new RoutineBlock { Title = b.Title, Color = b.Color, Day = b.Day, StartMin = b.StartMin, EndMin = b.EndMin };
+        _clipboard = new RoutineBlock { Title = b.Title, Color = b.Color, Note = b.Note, Day = b.Day, StartMin = b.StartMin, EndMin = b.EndMin };
         return true;
     }
 
@@ -176,7 +176,7 @@ public class RoutineView : UserControl
         if (Current is not { } r) return;
         var c = new Routine { Name = r.Name + L.T(" (copy)") };
         foreach (var b in r.Blocks)
-            c.Blocks.Add(new RoutineBlock { Title = b.Title, Day = b.Day, StartMin = b.StartMin, EndMin = b.EndMin, Color = b.Color });
+            c.Blocks.Add(new RoutineBlock { Title = b.Title, Day = b.Day, StartMin = b.StartMin, EndMin = b.EndMin, Color = b.Color, Note = b.Note });
         _data.Routines.Add(c);
         Reselect(c); Save();
     }

@@ -87,7 +87,7 @@ public class UndoTests
         try
         {
             var r = new Routine { Name = "R" };
-            r.Blocks.Add(new RoutineBlock { Title = "X", Day = DayOfWeek.Monday, StartMin = 600, EndMin = 660, Color = "#123456" });
+            r.Blocks.Add(new RoutineBlock { Title = "X", Day = DayOfWeek.Monday, StartMin = 600, EndMin = 660, Color = "#123456", Note = "Perna" });
             s.Data.Routines.Add(r); s.DataChanged();
             var view = new RoutineView(s);
             view.SelectRoutine(r.Id);
@@ -99,7 +99,7 @@ public class UndoTests
             var b = s.Data.Routines[0].Blocks;
             Assert.Equal(3, b.Count);
             Assert.Equal(new[] { 600, 660, 720 }, b.Select(x => x.StartMin));
-            Assert.All(b, x => { Assert.Equal("X", x.Title); Assert.Equal("#123456", x.Color); Assert.Equal(DayOfWeek.Monday, x.Day); });
+            Assert.All(b, x => { Assert.Equal("X", x.Title); Assert.Equal("Perna", x.Note); Assert.Equal("#123456", x.Color); Assert.Equal(DayOfWeek.Monday, x.Day); });
             Assert.Equal(3, b.Select(x => x.Id).Distinct().Count());
             s.Undo();
             Assert.Equal(2, s.Data.Routines[0].Blocks.Count);

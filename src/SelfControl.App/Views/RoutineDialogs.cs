@@ -51,6 +51,7 @@ static class RoutineDialogs
     {
         bool changed = false;
         var title = new TextBox { Text = block.Title, MinWidth = 260 };
+        var note = new TextBox { Text = block.Note, MinWidth = 260, MinHeight = 60, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Watermark = L.T("e.g. Legs and arms") };
         string? color = block.Color;
         var swatches = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         void Paint()
@@ -78,11 +79,12 @@ static class RoutineDialogs
             Children =
             {
                 new TextBlock { Text = L.T("Title") }, title,
+                new TextBlock { Text = L.T("Note (optional)") }, note,
                 new TextBlock { Text = L.T("Color") }, swatches,
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { del, new Border { Width = 40 }, cancel, save } },
             }
         });
-        save.Click += (_, _) => { block.Title = string.IsNullOrWhiteSpace(title.Text) ? L.T("New activity") : title.Text.Trim(); block.Color = color; changed = true; win.Close(); };
+        save.Click += (_, _) => { block.Title = string.IsNullOrWhiteSpace(title.Text) ? L.T("New activity") : title.Text.Trim(); block.Color = color; block.Note = string.IsNullOrWhiteSpace(note.Text) ? null : note.Text.Trim(); changed = true; win.Close(); };
         del.Click += (_, _) => { routine.Blocks.Remove(block); changed = true; win.Close(); };
         cancel.Click += (_, _) => win.Close();
         await win.ShowDialog(owner);

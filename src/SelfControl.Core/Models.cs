@@ -16,6 +16,8 @@ public class RoutineBlock
     public int StartMin { get; set; }
     public int EndMin { get; set; }
     public string? Color { get; set; }
+    /// <summary>Optional free text shown under the title (e.g. "Legs and arms").</summary>
+    public string? Note { get; set; }
 }
 
 /// <summary>Which routine applies to the week starting on <see cref="WeekStart"/> (a Monday).</summary>

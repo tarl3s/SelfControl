@@ -16,6 +16,7 @@ public class RoutineGrid : Control
 
     static readonly IBrush Line = new SolidColorBrush(Color.Parse("#262626"));
     static readonly IBrush Dim = new SolidColorBrush(Color.Parse("#9A9A9A"));
+    static readonly IBrush NoteBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
     static readonly IBrush DefaultFill = new SolidColorBrush(Color.Parse("#1A1A1A"));
     static readonly Pen LinePen = new(Line, 1);
     // Marks the current time on today's column; kept faint so it doesn't pull the eye.
@@ -45,7 +46,7 @@ public class RoutineGrid : Control
     public RoutineBlock? Paste(RoutineBlock src)
     {
         if (_routine == null) return null;
-        var nb = new RoutineBlock { Title = src.Title, Color = src.Color, Day = src.Day, StartMin = src.StartMin, EndMin = src.EndMin };
+        var nb = new RoutineBlock { Title = src.Title, Color = src.Color, Note = src.Note, Day = src.Day, StartMin = src.StartMin, EndMin = src.EndMin };
         var after = Selected ?? src;
         if (_hover is { } p) RoutineOps.Move(nb, DayOfColumn(ColumnAt(p.X, Bounds.Width)), RoutineOps.SnapMin(MinuteAt(p.Y)));
         else RoutineOps.Move(nb, after.Day, after.EndMin);
@@ -188,8 +189,16 @@ public class RoutineGrid : Control
                 if (inner.Width > 8 && inner.Height > 8)
                 {
                     ctx.DrawText(Text(b.Title, 12, Brushes.White, inner.Width, FontWeight.SemiBold), inner.TopLeft);
-                    if (inner.Height > 30)
-                        ctx.DrawText(Text($"{Hm(b.StartMin)}–{Hm(b.EndMin)}", 11, Dim, inner.Width), new Point(inner.X, inner.Y + 16));
+                    double y = inner.Y + 16, room = inner.Bottom - y;
+                    if (!string.IsNullOrWhiteSpace(b.Note) && room > 12)
+                    {
+                        var nt = Text(b.Note, 11, NoteBrush, inner.Width);
+                        nt.MaxTextHeight = Math.Max(13, room - (room > 44 ? 15 : 0));
+                        ctx.DrawText(nt, new Point(inner.X, y));
+                        y += nt.Height + 1;
+                    }
+                    if (inner.Bottom - y > 13)
+                        ctx.DrawText(Text($"{Hm(b.StartMin)}–{Hm(b.EndMin)}", 11, Dim, inner.Width), new Point(inner.X, y));
                 }
             }
         var now = Now();

@@ -47,6 +47,8 @@ public static partial class L
         ["Delete"] = "Excluir",
         ["Edit activity"] = "Editar atividade",
         ["Title"] = "Título",
+        ["Note (optional)"] = "Nota (opcional)",
+        ["e.g. Legs and arms"] = "ex.: Perna e braço",
         ["Color"] = "Cor",
         ["New activity"] = "Nova atividade",
         ["Add"] = "Adicionar",
