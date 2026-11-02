@@ -58,6 +58,8 @@ public class BlockList
     public List<string> Apps { get; set; } = new();
     /// <summary>Domains (e.g. "youtube.com").</summary>
     public List<string> Sites { get; set; } = new();
+    /// <summary>Program name shown for each blocked exe (e.g. "steam.exe" → "Steam"). Optional.</summary>
+    public Dictionary<string, string> AppLabels { get; set; } = new();
 }
 
 public enum HomeBlockKind { Text, Image, TodayRoutine, NextEvents, TodayTasks, LockStatus }

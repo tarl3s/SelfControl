@@ -57,7 +57,7 @@ public class RoutineView : UserControl
         root.Children.Add(bar); root.Children.Add(header); root.Children.Add(_scroll);
         Content = root;
 
-        _picker.ItemsSource = _data.Routines;
+        _picker.ItemsSource = _data.Routines.ToList();
         _picker.SelectionChanged += (_, _) => { if (!_busy) ShowSelected(); };
         _active.Click += (_, _) => SetActive();
         _grid.Changed += Save;
@@ -114,7 +114,9 @@ public class RoutineView : UserControl
     {
         _busy = true;
         var cur = Current;
-        _picker.ItemsSource = null; _picker.ItemsSource = _data.Routines;
+        // Always a copy: binding the live list crashed when a routine was deleted while selected (stale selection index).
+        _picker.SelectedItem = null;
+        _picker.ItemsSource = _data.Routines.ToList();
         // Match by id: after undo/import the routines are new objects.
         _picker.SelectedItem = (cur == null ? null : _data.Routines.FirstOrDefault(r => r.Id == cur.Id)) ?? _data.Routines.FirstOrDefault();
         _busy = false;

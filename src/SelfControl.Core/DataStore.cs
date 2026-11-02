@@ -107,6 +107,7 @@ public class DataStore
         d.BlockList ??= new BlockList();
         d.BlockList.Apps ??= new();
         d.BlockList.Sites ??= new();
+        d.BlockList.AppLabels ??= new();
         foreach (var r in d.Routines) r.Blocks = Clean(r.Blocks);
         foreach (var e in d.Events) e.Rule = Fix(e.Rule);
         foreach (var t in d.Tasks)

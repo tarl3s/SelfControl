@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -34,13 +33,12 @@ public class TasksView : UserControl
         addSite.Click += (_, _) => AddSite();
         site.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) AddSite(); };
 
-        var running = new ComboBox { MinWidth = 200, PlaceholderText = "Programas abertos" };
-        void LoadRunning() => running.ItemsSource = RunningExes();
-        running.DropDownOpened += (_, _) => LoadRunning();
-        var addApp = RoutineDialogs.Btn("Adicionar");
-        addApp.Click += (_, _) =>
+        var addApp = RoutineDialogs.Btn("Escolher programa…");
+        addApp.IsEnabled = state?.Apps != null;
+        addApp.Click += async (_, _) =>
         {
-            if (running.SelectedItem is string s) { Report(RuleText.TryAddApp(Data.BlockList, s)); running.SelectedItem = null; Changed(); }
+            if (TopLevel.GetTopLevel(this) is not Window w || _state?.Apps is not { } catalog) return;
+            if (await AppPickerDialog.Show(w, catalog) is { } app) { Report(RuleText.TryAddProgram(Data.BlockList, app)); Changed(); }
         };
         var browse = RoutineDialogs.Btn("Procurar .exe…");
         browse.Click += async (_, _) => await Browse();
@@ -54,7 +52,7 @@ public class TasksView : UserControl
         {
             new TextBlock { Text = "Lista de bloqueio", FontSize = 20, FontWeight = FontWeight.SemiBold },
             new TextBlock { Text = "Programas", Foreground = Dim },
-            new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { running, addApp, browse } },
+            new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { addApp, browse } },
             _apps,
             new TextBlock { Text = "Sites", Foreground = Dim, Margin = new Thickness(0, 8, 0, 0) },
             new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { site, addSite } },
@@ -81,21 +79,6 @@ public class TasksView : UserControl
     void Report(string? error)
     {
         _error.Text = error ?? ""; _error.IsVisible = error != null;
-    }
-
-    static List<string> RunningExes()
-    {
-        var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            foreach (var p in Process.GetProcesses())
-            {
-                try { names.Add(p.ProcessName.ToLowerInvariant() + ".exe"); } catch { }
-                p.Dispose();
-            }
-        }
-        catch { }
-        return names.Where(BlockRules.CanBlockApp).ToList();
     }
 
     async Task Browse()
@@ -136,8 +119,31 @@ public class TasksView : UserControl
         }
         _status.Text = TaskRules.IsLocked(Data, today) ? "Bloqueado" : "Liberado";
 
-        Fill(_apps, Data.BlockList.Apps, a => { Data.BlockList.Apps.Remove(a); Changed(); });
+        FillApps();
         Fill(_sites, Data.BlockList.Sites, s => { Data.BlockList.Sites.Remove(s); Changed(); });
+    }
+
+    /// <summary>One row per program ("Steam", with its exes underneath); Remover takes out all of them.</summary>
+    void FillApps()
+    {
+        _apps.Children.Clear();
+        var list = Data.BlockList;
+        if (list.Apps.Count == 0) _apps.Children.Add(new TextBlock { Text = "Nenhum.", Foreground = Dim });
+        foreach (var (label, exes) in RuleText.AppGroups(list))
+        {
+            var x = RoutineDialogs.Btn("Remover");
+            x.Click += (_, _) =>
+            {
+                foreach (var e in exes) { list.Apps.Remove(e); list.AppLabels.Remove(e); }
+                Changed();
+            };
+            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { new TextBlock { Text = label } } };
+            if (exes.Count > 1 || exes[0] != label) text.Children.Add(new TextBlock { Text = string.Join(", ", exes), Foreground = Dim, FontSize = 12 });
+            var row = new DockPanel();
+            row.Children.Add(RoutineDialogs.Docked(x, Dock.Right));
+            row.Children.Add(text);
+            _apps.Children.Add(row);
+        }
     }
 
     static void Fill(StackPanel panel, List<string> items, Action<string> remove)

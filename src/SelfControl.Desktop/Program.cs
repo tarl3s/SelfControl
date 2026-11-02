@@ -12,6 +12,7 @@ internal static class Program
     public static int Main(string[] args)
     {
         if (args.Contains("--smoke")) return Smoke();
+        if (args.Contains("--list-apps")) return ListApps();
 
         using var mutex = new Mutex(true, @"Local\SelfControl.SingleInstance", out var first);
         if (!first)
@@ -35,7 +36,8 @@ internal static class Program
         SelfControl.App.App.StartHidden = args.Contains("--tray");
         // AppState uses the Avalonia dispatcher, so it is built once Avalonia is running.
         SelfControl.App.App.StateFactory = () =>
-            new AppState(new DataStore(folder), blocker, new ToastNotifier(), new RegistryAutostart(), firstRun);
+            new AppState(new DataStore(folder), blocker, new ToastNotifier(), new RegistryAutostart(), firstRun)
+            { Apps = new WindowsAppCatalog(Path.Combine(folder, "icons")) };
         SelfControl.App.App.StateReady += state =>
         {
             Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => { Log("ui", e.Exception); e.Handled = true; };
@@ -59,6 +61,15 @@ internal static class Program
     }
 
     const string ShowEventName = @"Local\SelfControl.Show";
+
+    /// <summary>Dev check: prints the installed programs the block-list picker would show.</summary>
+    static int ListApps()
+    {
+        var apps = new WindowsAppCatalog(Path.Combine(Path.GetTempPath(), "selfcontrol-icons")).Installed();
+        foreach (var a in apps) Console.WriteLine($"{a.Name} | {a.Publisher} | {string.Join(", ", a.Exes)} | {(a.IconPng != null ? "icon" : "-")}");
+        Console.WriteLine($"{apps.Count} programs");
+        return 0;
+    }
 
     static int Smoke()
     {

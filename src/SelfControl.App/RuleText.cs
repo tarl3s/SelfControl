@@ -51,6 +51,24 @@ public static class RuleText
         return null;
     }
 
+    /// <summary>Adds every exe of an installed program, remembering its name for the list.</summary>
+    public static string? TryAddProgram(BlockList list, InstalledApp app)
+    {
+        var added = false;
+        foreach (var exe in app.Exes.Where(BlockRules.CanBlockApp))
+        {
+            if (!list.Apps.Contains(exe)) list.Apps.Add(exe);
+            list.AppLabels[exe] = app.Name;
+            added = true;
+        }
+        return added ? null : "Esse programa não pode ser bloqueado";
+    }
+
+    /// <summary>Blocked apps grouped by program name (an exe without a name is its own group).</summary>
+    public static List<(string Label, List<string> Exes)> AppGroups(BlockList list) =>
+        list.Apps.GroupBy(e => list.AppLabels.TryGetValue(e, out var n) ? n : e)
+            .Select(g => (g.Key, g.ToList())).ToList();
+
     /// <summary>Adds a site. Returns an error message, or null when added (or already there).</summary>
     public static string? TryAddSite(BlockList list, string input)
     {

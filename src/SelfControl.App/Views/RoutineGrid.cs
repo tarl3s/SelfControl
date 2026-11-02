@@ -18,7 +18,8 @@ public class RoutineGrid : Control
     static readonly IBrush Dim = new SolidColorBrush(Color.Parse("#9A9A9A"));
     static readonly IBrush DefaultFill = new SolidColorBrush(Color.Parse("#1A1A1A"));
     static readonly Pen LinePen = new(Line, 1);
-    static readonly Pen NowPen = new(Brushes.White, 2);
+    // Marks the current time on today's column; kept faint so it doesn't pull the eye.
+    static readonly Pen NowPen = new(new SolidColorBrush(Color.Parse("#4D4D4D")), 1);
     static readonly Pen SelPen = new(Brushes.White, 2);
     static readonly Pen BlockPen = new(new SolidColorBrush(Color.Parse("#3A3A3A")), 1);
     static readonly FontFamily Font = new("Segoe UI, Inter, sans-serif");
