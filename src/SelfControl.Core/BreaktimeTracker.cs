@@ -28,6 +28,9 @@ public class BreaktimeTracker
 
     public void OnClosed(string key) => _state.Remove(key);
 
+    /// <summary>Forgets everything (used when the lock lifts, so a later relock warns afresh).</summary>
+    public void Clear() => _state.Clear();
+
     public TimeSpan? Remaining(string key)
     {
         if (_state.TryGetValue(key, out var end) && end is { } e && _now() < e) return e - _now();

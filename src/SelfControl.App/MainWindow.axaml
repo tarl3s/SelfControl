@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SelfControl.App.MainWindow" Title="SelfControl" Width="960" Height="640" MinWidth="640" MinHeight="420"
+        Background="{DynamicResource Bg0}">
+  <DockPanel>
+    <Border x:Name="LoadFailedBanner" DockPanel.Dock="Top" Background="#FFFFFF" Padding="12,8" IsVisible="False">
+      <TextBlock Text="Não foi possível ler seus dados — alterações não serão salvas" Foreground="#000000" FontWeight="SemiBold"/>
+    </Border>
+    <Border DockPanel.Dock="Left" Width="200" Background="{DynamicResource Bg1}">
+      <ListBox x:Name="Nav" Background="Transparent" Margin="8" SelectedIndex="0">
+        <ListBoxItem Content="Início"/>
+        <ListBoxItem Content="Rotina"/>
+        <ListBoxItem Content="Eventos"/>
+        <ListBoxItem Content="Tarefas"/>
+      </ListBox>
+    </Border>
+    <ContentControl x:Name="Host" Background="{DynamicResource Bg0}"/>
+  </DockPanel>
+</Window>

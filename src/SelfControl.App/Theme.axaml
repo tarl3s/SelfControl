@@ -1,0 +1,16 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <SolidColorBrush x:Key="Bg0" Color="#000000"/>
+  <SolidColorBrush x:Key="Bg1" Color="#0D0D0D"/>
+  <SolidColorBrush x:Key="Bg2" Color="#1A1A1A"/>
+  <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="TextSecondary" Color="#9A9A9A"/>
+  <SolidColorBrush x:Key="Selection" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="OnSelection" Color="#000000"/>
+  <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPointerOver" Color="#E6E6E6"/>
+  <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPressed" Color="#CCCCCC"/>
+  <SolidColorBrush x:Key="ListBoxItemForegroundSelected" Color="#000000"/>
+  <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPointerOver" Color="#000000"/>
+  <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPressed" Color="#000000"/>
+  <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="#1A1A1A"/>
+</ResourceDictionary>

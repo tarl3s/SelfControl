@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.Net;
+using Avalonia;
+using SelfControl.App;
+using SelfControl.Core;
 
 namespace SelfControl.Desktop;
 
@@ -9,9 +12,45 @@ internal static class Program
     public static int Main(string[] args)
     {
         if (args.Contains("--smoke")) return Smoke();
-        // TODO(Task 6): real app startup (Avalonia, AppState wiring, tray) goes here.
-        return 0;
+
+        using var mutex = new Mutex(true, @"Local\SelfControl.SingleInstance", out var first);
+        if (!first)
+        {
+            try { using var ev = EventWaitHandle.OpenExisting(ShowEventName); ev.Set(); } catch { }
+            return 0;
+        }
+        using var showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SelfControl");
+        var firstRun = !File.Exists(Path.Combine(folder, "data.json"));
+
+        using var blocker = new WindowsBlocker();
+        ExtensionBridge? bridge = null;
+        SelfControl.App.App.StartHidden = args.Contains("--tray");
+        // AppState uses the Avalonia dispatcher, so it is built once Avalonia is running.
+        SelfControl.App.App.StateFactory = () =>
+            new AppState(new DataStore(folder), blocker, new ToastNotifier(), new RegistryAutostart(), firstRun);
+        SelfControl.App.App.StateReady += state =>
+        {
+            bridge = new ExtensionBridge(
+                h => { var i = state.Check(h); return new BridgeStatus(i.Blocked, i.Phase, i.Tasks, i.Remaining); },
+                state.StartBreak, state.SiteClosed);
+            try { bridge.Start(); } catch (Exception e) { Console.Error.WriteLine("Bridge not started: " + e.Message); }
+        };
+
+        new Thread(() =>
+        {
+            while (showEvent.WaitOne()) SelfControl.App.App.ShowMain();
+        }) { IsBackground = true }.Start();
+
+        try
+        {
+            return AppBuilder.Configure<SelfControl.App.App>().UsePlatformDetect()
+                .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnExplicitShutdown);
+        }
+        finally { bridge?.Dispose(); }
     }
+
+    const string ShowEventName = @"Local\SelfControl.Show";
 
     static int Smoke()
     {

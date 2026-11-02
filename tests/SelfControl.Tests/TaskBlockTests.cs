@@ -146,3 +146,18 @@ public class TaskBlockTests
         Assert.Equal(BlockPhase.Free, t.OnSeen("a.exe", false));
     }
 }
+
+public class BreaktimeClearTests
+{
+    [Fact]
+    public void Clear_ForgetsWarningsAndBreaks()
+    {
+        var now = new DateTime(2026, 1, 1, 10, 0, 0);
+        var t = new SelfControl.Core.BreaktimeTracker(() => now);
+        t.OnSeen("a", true); t.StartBreak("a", 5);
+        Assert.NotNull(t.Remaining("a"));
+        t.Clear();
+        Assert.Null(t.Remaining("a"));
+        Assert.Equal(SelfControl.Core.BlockPhase.Warning, t.OnSeen("a", true));
+    }
+}
