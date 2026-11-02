@@ -20,6 +20,8 @@ static class SettingsDialog
         var import = RoutineDialogs.Btn("Importar dados…");
         var close = RoutineDialogs.Btn("Fechar", true);
         var auto = new CheckBox { Content = "Iniciar com o Windows" };
+        var breaks = new CheckBox { Content = "Sugerir pausas (alongamento e olhos) a cada hora", IsChecked = state.Data.BreakReminders };
+        breaks.IsCheckedChanged += (_, _) => { state.Data.BreakReminders = breaks.IsChecked == true; state.DataChanged(); };
         try { auto.IsChecked = state.Autostart.Enabled; } catch (Exception) { auto.IsEnabled = false; }
         bool syncing = false;
         auto.IsCheckedChanged += (_, _) =>
@@ -40,6 +42,7 @@ static class SettingsDialog
             Margin = new Thickness(16), Spacing = 12,
             Children = { new TextBlock { Text = "Configurações", FontSize = 20, FontWeight = FontWeight.SemiBold },
                 auto,
+                breaks,
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { export, import } },
                 message,
                 new StackPanel { HorizontalAlignment = HorizontalAlignment.Right, Children = { close } } }

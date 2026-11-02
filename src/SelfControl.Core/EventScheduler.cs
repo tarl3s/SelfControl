@@ -22,6 +22,12 @@ public static class EventScheduler
         return result;
     }
 
+    /// <summary>
+    /// Removes one-time events that already happened (once their 2-minute firing window is over). Returns how many.
+    /// </summary>
+    public static int RemovePast(List<ReminderEvent> events, DateTime now) =>
+        events.RemoveAll(ev => ev.Rule.Date is { } d && now - d.ToDateTime(ev.Time) > Grace);
+
     /// <summary>First occurrence strictly after <paramref name="from"/>, or null if there is none.</summary>
     public static DateTime? NextOccurrence(ReminderEvent ev, DateTime from)
     {

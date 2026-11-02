@@ -83,4 +83,6 @@ public class AppData
     public List<TaskItem> Tasks { get; set; } = new();
     public BlockList BlockList { get; set; } = new();
     public List<HomeBlock> Home { get; set; } = new();
+    /// <summary>Suggest stretches / eye exercises after every hour the computer is in use.</summary>
+    public bool BreakReminders { get; set; } = true;
 }

@@ -41,6 +41,7 @@ public partial class App : Application
             if (!StartHidden) _window.Show();
             SetupTray();
             var warnings = new WarningManager(state);
+            state.BreakDue += Views.BreakWindows.ShowPrompt;
             desktop.Exit += (_, _) => warnings.Dispose();
             desktop.Exit += (_, _) => state.Dispose();
         }

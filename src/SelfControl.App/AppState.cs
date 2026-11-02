@@ -43,6 +43,9 @@ public sealed class AppState : IDisposable
     public event Action<string>? WarningDismissed;
     /// <summary>Raised when the last task of today is checked: every open warning closes.</summary>
     public event Action? LockLifted;
+    /// <summary>Raised on the UI thread after each hour of use (when break reminders are on): suggest exercises.</summary>
+    public event Action? BreakDue;
+    readonly BreakClock _breaks;
     readonly HashSet<string> _running = new(StringComparer.OrdinalIgnoreCase);
     readonly HashSet<string> _breaking = new(StringComparer.OrdinalIgnoreCase);
     readonly DispatcherTimer _breakTimer;
@@ -63,6 +66,8 @@ public sealed class AppState : IDisposable
             Data.Home.Add(new HomeBlock { Kind = HomeBlockKind.TodayTasks });
         }
         if (firstRun) { try { autostart.Enabled = true; } catch { /* registry unavailable: not fatal */ } }
+        EventScheduler.RemovePast(Data.Events, _lastCheck);
+        _breaks = new BreakClock(_lastCheck);
         _snapshot = DataStore.Snapshot(Data);
 
         _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
@@ -192,6 +197,8 @@ public sealed class AppState : IDisposable
         }
         catch (Exception) { /* a toast failure must not crash the app */ }
         _lastCheck = now;
+        if (EventScheduler.RemovePast(Data.Events, now) > 0) DataChanged();
+        if (_breaks.Tick(now) && Data.BreakReminders) BreakDue?.Invoke();
         RefreshWatched();
         var today = DateOnly.FromDateTime(now);
         var newDay = today != _today;
