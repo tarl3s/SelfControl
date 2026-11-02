@@ -46,7 +46,6 @@ public class DataStore
     public void Save(AppData data)
     {
         if (LoadFailed) return;
-    {
         Directory.CreateDirectory(_folder);
         var tmp = FilePath + ".tmp";
         File.WriteAllText(tmp, JsonSerializer.Serialize(data, Options));
