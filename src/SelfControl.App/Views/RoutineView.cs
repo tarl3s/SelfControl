@@ -23,10 +23,15 @@ public class RoutineView : UserControl
 
     public RoutineView() : this(null) { }
 
-    public RoutineView(AppState? state)
+    public RoutineView(AppState? state) : this(state?.Data ?? new AppData(), state) { }
+
+    internal ToggleButton ActiveToggle => _active;
+    internal Func<DateOnly> TodayProvider { get; set; } = () => DateOnly.FromDateTime(DateTime.Today);
+
+    internal RoutineView(AppData data, AppState? state)
     {
         _state = state;
-        _data = state?.Data ?? new AppData();
+        _data = data;
         Button B(string t, Action a) { var b = new Button { Content = t }; b.Click += (_, _) => a(); return b; }
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(16, 12) };
         _rename = B("Renomear", Rename); _dup = B("Duplicar", Duplicate); _del = B("Excluir", Delete);
@@ -78,7 +83,8 @@ public class RoutineView : UserControl
 
     Routine? Current => _picker.SelectedItem as Routine;
     Window? Owner => TopLevel.GetTopLevel(this) as Window;
-    static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+    DateOnly Today => TodayProvider();
+    bool InEffect(Routine? r) => r != null && RoutineResolver.For(_data, Today)?.Id == r.Id;
 
     void Save() => _state?.DataChanged();
 
@@ -87,7 +93,7 @@ public class RoutineView : UserControl
         var r = Current;
         _grid.Routine = r;
         _rename.IsEnabled = _dup.IsEnabled = _del.IsEnabled = _active.IsEnabled = r != null;
-        _active.IsChecked = r != null && _data.ActiveRoutineId == r.Id;
+        _active.IsChecked = InEffect(r);
     }
 
     /// <summary>Keeps the picker in step if routines changed elsewhere (also after our own edits); never saves.</summary>
@@ -100,7 +106,7 @@ public class RoutineView : UserControl
         _busy = false;
         var shown = Current;
         if (shown != _grid.Routine) ShowSelected();
-        else { _active.IsChecked = shown != null && _data.ActiveRoutineId == shown.Id; _grid.Refresh(); }
+        else { _active.IsChecked = InEffect(shown); _grid.Refresh(); }
     }
 
     void Reselect(Routine? r)

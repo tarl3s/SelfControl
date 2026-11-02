@@ -31,7 +31,7 @@ public class RoutineGrid : Control
     public event Action? Changed;
     public event Action<RoutineBlock>? EditRequested;
 
-    (RoutineBlock b, GridZone zone, int grab)? _drag;
+    (RoutineBlock b, GridZone zone, int grab, DayOfWeek day, int s, int e)? _drag;
 
     public RoutineGrid() { ClipToBounds = true; }
 
@@ -90,7 +90,7 @@ public class RoutineGrid : Control
         }
         Selected = b;
         if (e.ClickCount == 2) { InvalidateVisual(); EditRequested?.Invoke(b); return; }
-        _drag = (b, zone, MinuteAt(p.Y) - b.StartMin);
+        _drag = (b, zone, MinuteAt(p.Y) - b.StartMin, b.Day, b.StartMin, b.EndMin);
         e.Pointer.Capture(this);
         InvalidateVisual();
     }
@@ -106,6 +106,7 @@ public class RoutineGrid : Control
                    : z == GridZone.Body ? new Cursor(StandardCursorType.SizeAll) : null;
             return;
         }
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { EndDrag(); return; }
         switch (d.zone)
         {
             case GridZone.Top: RoutineOps.ResizeTop(d.b, MinuteAt(p.Y)); break;
@@ -118,10 +119,21 @@ public class RoutineGrid : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        if (_drag == null) return;
-        _drag = null;
+        EndDrag();
         e.Pointer.Capture(null);
-        Changed?.Invoke();
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        EndDrag();
+    }
+
+    void EndDrag()
+    {
+        if (_drag is not { } d) return;
+        _drag = null;
+        if (d.b.Day != d.day || d.b.StartMin != d.s || d.b.EndMin != d.e) Changed?.Invoke();
     }
 
     /// <summary>Called by the owner after editing/deleting a block outside the grid.</summary>

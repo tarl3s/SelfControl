@@ -82,7 +82,7 @@ static class RoutineDialogs
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { del, new Border { Width = 40 }, cancel, save } },
             }
         });
-        save.Click += (_, _) => { block.Title = title.Text?.Trim() ?? ""; block.Color = color; changed = true; win.Close(); };
+        save.Click += (_, _) => { block.Title = string.IsNullOrWhiteSpace(title.Text) ? "Nova atividade" : title.Text.Trim(); block.Color = color; changed = true; win.Close(); };
         del.Click += (_, _) => { routine.Blocks.Remove(block); changed = true; win.Close(); };
         cancel.Click += (_, _) => win.Close();
         await win.ShowDialog(owner);
