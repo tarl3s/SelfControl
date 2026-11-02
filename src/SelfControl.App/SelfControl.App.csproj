@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <ProjectReference Include="..\SelfControl.Core\SelfControl.Core.csproj" />
+    <InternalsVisibleTo Include="SelfControl.UiTests" />
+  </ItemGroup>
+</Project>
