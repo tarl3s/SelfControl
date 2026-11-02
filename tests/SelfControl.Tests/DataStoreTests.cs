@@ -18,6 +18,22 @@ public class DataStoreTests : IDisposable
         Assert.Empty(Directory.GetFiles(_dir, "data.corrupt-*"));
     }
 
+    [Fact]
+    public void Load_LockedFile_SetsLoadFailed_SaveDoesNotOverwrite()
+    {
+        Directory.CreateDirectory(_dir);
+        var p = Path.Combine(_dir, "data.json");
+        File.WriteAllText(p, "{\"Version\":1,\"Events\":[{\"Message\":\"keep\"}]}");
+        var store = new DataStore(_dir);
+        using (new FileStream(p, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            store.Load();
+        Assert.True(store.LoadFailed);
+        store.Save(new AppData());
+        Assert.Contains("keep", File.ReadAllText(p));
+        Assert.Equal("keep", store.Load().Events[0].Message);
+        Assert.False(store.LoadFailed);
+    }
+
     public void Dispose() { if (Directory.Exists(_dir)) Directory.Delete(_dir, true); }
 
     [Fact]

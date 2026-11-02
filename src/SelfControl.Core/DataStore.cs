@@ -10,23 +10,42 @@ public class DataStore
 
     public DataStore(string folder) => _folder = folder;
 
+    /// <summary>True when the last Load could not read an existing file; Save then does nothing so it is never overwritten.</summary>
+    public bool LoadFailed { get; private set; }
+
     public AppData Load()
     {
+        LoadFailed = false;
         if (!File.Exists(FilePath)) return new AppData();
-        try
+        for (int attempt = 0; ; attempt++)
         {
-            return Parse(File.ReadAllText(FilePath));
-        }
-        catch (IOException) { return new AppData(); }
-        catch (UnauthorizedAccessException) { return new AppData(); }
-        catch (Exception e) when (e is JsonException or InvalidDataException)
-        {
-            File.Move(FilePath, Path.Combine(_folder, $"data.corrupt-{DateTime.Now:yyyyMMddHHmmss}.json"), true);
-            return new AppData();
+            try
+            {
+                return Parse(File.ReadAllText(FilePath));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                if (attempt >= 2) { LoadFailed = true; return new AppData(); }
+                Thread.Sleep(200);
+            }
+            catch (Exception e) when (e is JsonException or InvalidDataException)
+            {
+                try
+                {
+                    File.Move(FilePath, Path.Combine(_folder, $"data.corrupt-{DateTime.Now:yyyyMMddHHmmss}.json"), true);
+                }
+                catch (Exception m) when (m is IOException or UnauthorizedAccessException)
+                {
+                    LoadFailed = true;
+                }
+                return new AppData();
+            }
         }
     }
 
     public void Save(AppData data)
+    {
+        if (LoadFailed) return;
     {
         Directory.CreateDirectory(_folder);
         var tmp = FilePath + ".tmp";
