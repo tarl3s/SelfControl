@@ -37,7 +37,7 @@ internal static class Program
         // AppState uses the Avalonia dispatcher, so it is built once Avalonia is running.
         SelfControl.App.App.StateFactory = () =>
             new AppState(new DataStore(folder), blocker, new ToastNotifier(), new RegistryAutostart(), firstRun)
-            { Apps = new WindowsAppCatalog(Path.Combine(folder, "icons")), Updater = new Updater() };
+            { Apps = new WindowsAppCatalog(Path.Combine(folder, "icons")), Updater = new Updater(), Activity = new WindowsActivity() };
         SelfControl.App.App.StateReady += state =>
         {
             Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => { Log("ui", e.Exception); e.Handled = true; };

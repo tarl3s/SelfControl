@@ -38,6 +38,8 @@ sem nuvem: tudo fica no seu computador.
   - escolha os programas da lista de apps instalados (igual à tela *Aplicativos instalados* do Windows) ou qualquer `.exe`.
 - **Pausas a cada hora** — depois de cada hora no computador ele sugere alongamentos guiados ou um treino dos olhos
   (uma bolinha para seguir com os olhos: lados, cima e baixo, círculos, perto e longe).
+- **Tempo de uso** — a barra lateral mostra quanto tempo você usou o computador hoje (passe o mouse para ver os últimos
+  7 dias). Ele e a pausa de cada hora só contam uso real: não contam com a tela bloqueada, o PC suspenso ou 15 minutos sem uso.
 - **Ctrl+Z** desfaz a última mudança, **Delete** apaga o bloco selecionado da rotina, **Ctrl+C / Ctrl+V** copiam e colam, e dá para exportar / importar
   todos os dados nas Configurações. Em português e inglês.
 

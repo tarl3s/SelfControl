@@ -47,6 +47,11 @@ public sealed class AppState : IDisposable
     public event Action? LockLifted;
     /// <summary>Raised on the UI thread after each hour of use (when break reminders are on): suggest exercises.</summary>
     public event Action? BreakDue;
+    /// <summary>Says whether someone is really using the PC (null = always). Pauses the usage time and the hourly break.</summary>
+    public IActivity? Activity { get; init; }
+    /// <summary>Raised after each tick that added usage time.</summary>
+    public event Action? UsageChanged;
+    public TimeSpan TodayUsage => Usage.On(Data, DateOnly.FromDateTime(_now()));
     readonly BreakClock _breaks;
     readonly HashSet<string> _running = new(StringComparer.OrdinalIgnoreCase);
     readonly HashSet<string> _breaking = new(StringComparer.OrdinalIgnoreCase);
@@ -124,7 +129,9 @@ public sealed class AppState : IDisposable
         if (_undo.Count == 0) return false;
         _snapshot = _undo[^1];
         _undo.RemoveAt(_undo.Count - 1);
+        var usage = Data.UsageSeconds; // usage time is not an edit: undo keeps it
         Data = DataStore.FromSnapshot(_snapshot);
+        Data.UsageSeconds = usage;
         Refresh();
         return true;
     }
@@ -153,6 +160,7 @@ public sealed class AppState : IDisposable
             var data = _store.Import(path);
             _store.AcceptReplacement();
             Tracker.Clear(); _breaking.Clear();
+            data.UsageSeconds = Data.UsageSeconds; // each device keeps its own usage time
             ReplaceData(data); SaveNow();
             return null;
         }
@@ -212,7 +220,10 @@ public sealed class AppState : IDisposable
         catch (Exception) { /* a toast failure must not crash the app */ }
         _lastCheck = now;
         if (EventScheduler.RemovePast(Data.Events, now) > 0) DataChanged();
-        if (_breaks.Tick(now) && Data.BreakReminders) BreakDue?.Invoke();
+        bool active; try { active = Usage.IsActive(Activity); } catch (Exception) { active = true; }
+        var used = _breaks.Count(now, active);
+        if (used > TimeSpan.Zero) { Usage.Add(Data, DateOnly.FromDateTime(now), used); Save(); UsageChanged?.Invoke(); }
+        if (_breaks.Due() && Data.BreakReminders) BreakDue?.Invoke();
         RefreshWatched();
         var today = DateOnly.FromDateTime(now);
         var newDay = today != _today;

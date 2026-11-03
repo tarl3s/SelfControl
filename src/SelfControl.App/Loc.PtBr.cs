@@ -47,6 +47,8 @@ public static partial class L
         ["Delete"] = "Excluir",
         ["Edit activity"] = "Editar atividade",
         ["Title"] = "Título",
+        ["Usage time today"] = "Tempo de uso hoje",
+        ["Counts only while you use the computer (not locked, asleep or 15 minutes without use)."] = "Só conta enquanto você usa o computador (não conta com a tela bloqueada, suspenso ou 15 minutos sem uso).",
         ["Note (optional)"] = "Nota (opcional)",
         ["e.g. Legs and arms"] = "ex.: Perna e braço",
         ["Color"] = "Cor",

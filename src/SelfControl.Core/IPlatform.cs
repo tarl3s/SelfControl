@@ -28,3 +28,11 @@ public interface IAppCatalog
     /// <summary>Installed programs, sorted by name. Slow (reads the registry and folders): call off the UI thread.</summary>
     IReadOnlyList<InstalledApp> Installed();
 }
+
+/// <summary>Whether someone is really using the computer.</summary>
+public interface IActivity
+{
+    /// <summary>Time since the last key press or mouse move.</summary>
+    TimeSpan IdleFor { get; }
+    bool ScreenLocked { get; }
+}

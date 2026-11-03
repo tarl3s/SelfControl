@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using SelfControl.App.Views;
+using SelfControl.Core;
 
 namespace SelfControl.App;
 
@@ -35,6 +36,20 @@ public partial class MainWindow : Window
         if (state != null) state.ViewsChanged += () => banner.IsVisible = state.LoadFailed;
         if (state != null) this.FindControl<Button>("Gear")!.Click += async (_, _) => await SettingsDialog.Show(this, state);
         else this.FindControl<Button>("Gear")!.IsEnabled = false;
+        var usageText = this.FindControl<TextBlock>("UsageText")!;
+        this.FindControl<TextBlock>("UsageLabel")!.Text = L.T("Usage time today");
+        var usagePanel = this.FindControl<StackPanel>("UsagePanel")!;
+        void ShowUsage()
+        {
+            if (state == null) return;
+            usageText.Text = Usage.Format(state.TodayUsage);
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            ToolTip.SetTip(usagePanel, L.T("Counts only while you use the computer (not locked, asleep or 15 minutes without use).") + "\n\n" +
+                string.Join("\n", Enumerable.Range(0, 7).Select(i => today.AddDays(-i)).Select(d => $"{d:ddd dd/MM}: {Usage.Format(Usage.On(state.Data, d))}")));
+        }
+        usagePanel.IsVisible = state != null;
+        ShowUsage();
+        if (state != null) { state.UsageChanged += ShowUsage; state.ViewsChanged += ShowUsage; }
         _nav.SelectionChanged += (_, _) => ShowSelected();
         ShowSelected();
     }

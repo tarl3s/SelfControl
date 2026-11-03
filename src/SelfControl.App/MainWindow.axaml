@@ -8,6 +8,10 @@
     <Border DockPanel.Dock="Left" Width="200" Background="{DynamicResource Bg1}">
       <DockPanel>
       <Button x:Name="Gear" DockPanel.Dock="Bottom" Margin="8" HorizontalAlignment="Stretch"/>
+      <StackPanel x:Name="UsagePanel" DockPanel.Dock="Bottom" Margin="16,0,16,4" Spacing="2" Background="Transparent">
+        <TextBlock x:Name="UsageLabel" FontSize="12" Foreground="#9A9A9A"/>
+        <TextBlock x:Name="UsageText" FontSize="20" FontWeight="SemiBold"/>
+      </StackPanel>
       <ListBox x:Name="Nav" Background="Transparent" Margin="8" SelectedIndex="0">
         <ListBoxItem x:Name="NavHome"/>
         <ListBoxItem x:Name="NavRoutine"/>
