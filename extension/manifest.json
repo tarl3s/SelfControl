@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SelfControl",
-  "version": "1.0",
+  "version": "1.1.0",
   "description": "Blocks sites while tasks are pending (works with the SelfControl app).",
   "permissions": ["tabs", "webNavigation", "alarms", "storage"],
   "host_permissions": ["http://127.0.0.1:47613/*"],
