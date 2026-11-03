@@ -40,6 +40,22 @@ public class BreaksTests
     }
 
     [Fact]
+    public void Usage_KeepsFourWeeks_AndRanksProgramsAndSites()
+    {
+        var d = new AppData(); var today = new DateOnly(2026, 11, 5);           // a Thursday; its Monday is 2/11
+        Usage.Add(d, new DateOnly(2026, 10, 12), TimeSpan.FromHours(1), "Old");   // Monday 3 weeks before: kept
+        Usage.Add(d, new DateOnly(2026, 10, 11), TimeSpan.FromHours(1), "Older"); // the Sunday before: dropped
+        Usage.Add(d, today, TimeSpan.FromMinutes(30), "Steam");
+        Usage.Add(d, today, TimeSpan.FromMinutes(50), "Brave", "YouTube.com");
+        Usage.Add(d, today.AddDays(-1), TimeSpan.FromMinutes(40), "Steam");
+        Assert.Equal(TimeSpan.FromHours(1), Usage.On(d, new DateOnly(2026, 10, 12)));
+        Assert.Equal(TimeSpan.Zero, Usage.On(d, new DateOnly(2026, 10, 11)));
+        var week = Enumerable.Range(0, 7).Select(i => Usage.WeekStart(today).AddDays(i)).ToList();
+        Assert.Equal(new[] { ("Steam", TimeSpan.FromMinutes(70)), ("Brave", TimeSpan.FromMinutes(50)) }, Usage.Top(d.UsageApps, week));
+        Assert.Equal(new[] { ("youtube.com", TimeSpan.FromMinutes(50)) }, Usage.Top(d.UsageSites, week));
+    }
+
+    [Fact]
     public void Usage_AddsPerDay_FormatsAndForgetsOldDays()
     {
         var d = new AppData(); var day = new DateOnly(2026, 11, 3);

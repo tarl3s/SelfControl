@@ -129,9 +129,9 @@ public sealed class AppState : IDisposable
         if (_undo.Count == 0) return false;
         _snapshot = _undo[^1];
         _undo.RemoveAt(_undo.Count - 1);
-        var usage = Data.UsageSeconds; // usage time is not an edit: undo keeps it
+        var usage = Data.UsageSeconds; var usageApps = Data.UsageApps; var usageSites = Data.UsageSites; // usage time is not an edit: undo keeps it
         Data = DataStore.FromSnapshot(_snapshot);
-        Data.UsageSeconds = usage;
+        Data.UsageSeconds = usage; Data.UsageApps = usageApps; Data.UsageSites = usageSites;
         Refresh();
         return true;
     }
@@ -160,7 +160,7 @@ public sealed class AppState : IDisposable
             var data = _store.Import(path);
             _store.AcceptReplacement();
             Tracker.Clear(); _breaking.Clear();
-            data.UsageSeconds = Data.UsageSeconds; // each device keeps its own usage time
+            data.UsageSeconds = Data.UsageSeconds; data.UsageApps = Data.UsageApps; data.UsageSites = Data.UsageSites; // each device keeps its own usage time
             ReplaceData(data); SaveNow();
             return null;
         }
@@ -222,7 +222,13 @@ public sealed class AppState : IDisposable
         if (EventScheduler.RemovePast(Data.Events, now) > 0) DataChanged();
         bool active; try { active = Usage.IsActive(Activity); } catch (Exception) { active = true; }
         var used = _breaks.Count(now, active);
-        if (used > TimeSpan.Zero) { Usage.Add(Data, DateOnly.FromDateTime(now), used); Save(); UsageChanged?.Invoke(); }
+        if (used > TimeSpan.Zero)
+        {
+            string? app = null, site = null;
+            try { app = Activity?.ForegroundApp; site = Activity?.ActiveSite; } catch (Exception) { }
+            Usage.Add(Data, DateOnly.FromDateTime(now), used, app, site);
+            Save(); UsageChanged?.Invoke();
+        }
         if (_breaks.Due() && Data.BreakReminders) BreakDue?.Invoke();
         RefreshWatched();
         var today = DateOnly.FromDateTime(now);

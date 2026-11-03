@@ -92,3 +92,20 @@ async function scanTabs() {
     if (t.id !== undefined && t.url && /^https?:/.test(t.url) && !known[t.id]) await evaluate(t.id, t.url);
   }
 }
+
+// Usage time per site: tell the app which site is in the active tab of the focused window ("" when none).
+let lastActive = null;
+async function reportActive(force) {
+  let host = "";
+  try {
+    const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (t && t.url && /^https?:/.test(t.url)) host = new URL(t.url).hostname;
+  } catch {}
+  if (!force && host === lastActive) return;
+  lastActive = host;
+  post("/active?site=" + encodeURIComponent(host));
+}
+chrome.tabs.onActivated.addListener(() => reportActive());
+chrome.tabs.onUpdated.addListener((id, info) => { if (info.url) reportActive(); });
+chrome.windows.onFocusChanged.addListener(() => reportActive());
+chrome.alarms.onAlarm.addListener((a) => { if (a.name === "poll") reportActive(true); });

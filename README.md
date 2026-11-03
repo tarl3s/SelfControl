@@ -38,7 +38,8 @@ cloud: everything stays on your computer.
   - pick programs from your installed apps (like Windows' *Installed apps* list) or any `.exe`.
 - **Hourly breaks** — after each hour at the computer it suggests guided stretches or an eye exercise (a ball to
   follow with your eyes: side to side, up and down, circles, near and far).
-- **Usage time** — the sidebar shows how long you used the computer today (hover it for the last 7 days). It and the
+- **Usage** — a bar chart of your time at the computer per day (this week, one of the 3 before, or the last 4 weeks)
+  and the programs and sites you used most (sites need the browser extension). It and the
   hourly break count only real use: not while the screen is locked, the PC sleeps, or after 15 minutes without input.
 - **Ctrl+Z** undoes the last change, **Delete** removes the selected routine block, **Ctrl+C / Ctrl+V** copy and paste it, and you can export / import all
   your data in Settings. English and Portuguese.

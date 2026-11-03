@@ -32,18 +32,19 @@ internal static class Program
         TaskScheduler.UnobservedTaskException += (_, e) => { Log("task", e.Exception); e.SetObserved(); };
 
         using var blocker = new WindowsBlocker();
+        using var activity = new WindowsActivity();
         ExtensionBridge? bridge = null;
         SelfControl.App.App.StartHidden = args.Contains("--tray");
         // AppState uses the Avalonia dispatcher, so it is built once Avalonia is running.
         SelfControl.App.App.StateFactory = () =>
             new AppState(new DataStore(folder), blocker, new ToastNotifier(), new RegistryAutostart(), firstRun)
-            { Apps = new WindowsAppCatalog(Path.Combine(folder, "icons")), Updater = new Updater(), Activity = new WindowsActivity() };
+            { Apps = new WindowsAppCatalog(Path.Combine(folder, "icons")), Updater = new Updater(), Activity = activity };
         SelfControl.App.App.StateReady += state =>
         {
             Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => { Log("ui", e.Exception); e.Handled = true; };
             bridge = new ExtensionBridge(
                 h => { var i = state.Check(h); return new BridgeStatus(i.Blocked, i.Phase, i.Tasks, i.Remaining); },
-                state.StartBreak, state.SiteClosed);
+                state.StartBreak, state.SiteClosed, activity.ReportSite);
             try { bridge.Start(); } catch (Exception e) { Console.Error.WriteLine("Bridge not started: " + e.Message); }
         };
 

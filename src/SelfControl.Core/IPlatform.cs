@@ -35,4 +35,8 @@ public interface IActivity
     /// <summary>Time since the last key press or mouse move.</summary>
     TimeSpan IdleFor { get; }
     bool ScreenLocked { get; }
+    /// <summary>Name of the program in front (e.g. "Steam"), or null.</summary>
+    string? ForegroundApp => null;
+    /// <summary>Site open in the browser in front (from the extension), or null.</summary>
+    string? ActiveSite => null;
 }

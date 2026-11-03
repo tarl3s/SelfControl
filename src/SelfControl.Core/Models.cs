@@ -89,6 +89,10 @@ public class AppData
     public bool BreakReminders { get; set; } = true;
     /// <summary>"en", "pt-BR", or null to follow the Windows language.</summary>
     public string? Language { get; set; }
-    /// <summary>Seconds of real use per day ("yyyy-MM-dd"), last 60 days.</summary>
+    /// <summary>Seconds of real use per day ("yyyy-MM-dd"), last 4 weeks.</summary>
     public Dictionary<string, int> UsageSeconds { get; set; } = new();
+    /// <summary>Per day, seconds per program in front (display name).</summary>
+    public Dictionary<string, Dictionary<string, int>> UsageApps { get; set; } = new();
+    /// <summary>Per day, seconds per site (host) open in the browser in front.</summary>
+    public Dictionary<string, Dictionary<string, int>> UsageSites { get; set; } = new();
 }

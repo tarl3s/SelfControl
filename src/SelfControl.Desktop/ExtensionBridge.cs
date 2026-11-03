@@ -15,12 +15,13 @@ public sealed class ExtensionBridge : IDisposable
     readonly Func<string, BridgeStatus> _check;
     readonly Action<string, int> _startBreak;
     readonly Action<string> _closed;
+    readonly Action<string>? _active;
     static readonly int[] AllowedMinutes = { 5, 10, 15, 20, 30, 45, 60 };
     readonly HttpListener _http = new();
 
-    public ExtensionBridge(Func<string, BridgeStatus> check, Action<string, int> startBreak, Action<string> closed)
+    public ExtensionBridge(Func<string, BridgeStatus> check, Action<string, int> startBreak, Action<string> closed, Action<string>? active = null)
     {
-        _check = check; _startBreak = startBreak; _closed = closed;
+        _check = check; _startBreak = startBreak; _closed = closed; _active = active;
         _http.Prefixes.Add(Prefix);
     }
 
@@ -80,6 +81,7 @@ public sealed class ExtensionBridge : IDisposable
         {
             if (!string.IsNullOrWhiteSpace(q["site"])) _closed(q["site"]!); else res.StatusCode = 400;
         }
+        else if (req.HttpMethod == "POST" && path == "/active") _active?.Invoke(BareHost(q["site"] ?? "")); // "" = no site in front
         else res.StatusCode = 404;
     }
 
