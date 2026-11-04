@@ -6,13 +6,25 @@ using SelfControl.Core;
 
 namespace SelfControl.App.Views;
 
-/// <summary>Vertical bars (one per day) with the time on top and the label below; today's bar is white.</summary>
+/// <summary>Vertical bars (one per day) with the time on top and the label below; the selected day is white; click a bar to pick it.</summary>
 public class UsageChart : Control
 {
     static readonly IBrush Bar = new SolidColorBrush(Color.Parse("#5A5A5A"));
     static readonly IBrush Dim = new SolidColorBrush(Color.Parse("#9A9A9A"));
     static readonly IPen GridPen = new Pen(new SolidColorBrush(Color.Parse("#262626")), 1);
     IReadOnlyList<(string Label, TimeSpan Time, bool Today)> _bars = Array.Empty<(string, TimeSpan, bool)>();
+
+    /// <summary>The bar drawn in white (the day being shown), or null.</summary>
+    public int? Selected { get => _selected; set { _selected = value; InvalidateVisual(); } }
+    int? _selected;
+    public event Action<int>? BarClicked;
+
+    protected override void OnPointerPressed(Avalonia.Input.PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        if (_bars.Count > 0 && Bounds.Width > 0)
+            BarClicked?.Invoke(Math.Clamp((int)(e.GetPosition(this).X / (Bounds.Width / _bars.Count)), 0, _bars.Count - 1));
+    }
 
     public IReadOnlyList<(string Label, TimeSpan Time, bool Today)> Bars
     {
@@ -42,15 +54,15 @@ public class UsageChart : Control
         {
             var (label, t, today) = _bars[i];
             double cx = slot * i + slot / 2, bh = plot * t.TotalHours / maxH;
-            if (bh > 0) ctx.DrawRectangle(today ? Brushes.White : Bar, null, new Rect(cx - bw / 2, top + plot - bh, bw, bh), 3, 3);
+            if (bh > 0) ctx.DrawRectangle(i == _selected ? Brushes.White : Bar, null, new Rect(cx - bw / 2, top + plot - bh, bw, bh), 3, 3);
             if (!small && t > TimeSpan.Zero)
             {
                 var v = Text(Usage.Format(t), 11, Dim);
                 ctx.DrawText(v, new Point(cx - v.Width / 2, top + plot - bh - 16));
             }
-            if (!small || i % 7 == 0 || today)
+            if (!small || i % 7 == 0 || today || i == _selected)
             {
-                var l = Text(label, 11, today ? Brushes.White : Dim);
+                var l = Text(label, 11, today || i == _selected ? Brushes.White : Dim);
                 ctx.DrawText(l, new Point(cx - l.Width / 2, h - bottom + 4));
             }
         }

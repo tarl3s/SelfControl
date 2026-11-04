@@ -16,6 +16,9 @@ public class UsageView : UserControl
     readonly Func<DateOnly> _today;
     readonly TextBlock _total = new() { FontSize = 28, FontWeight = FontWeight.SemiBold };
     readonly TextBlock _average = new() { Foreground = Dim };
+    readonly TextBlock _scope = new() { Foreground = Dim, TextWrapping = TextWrapping.Wrap };
+    /// <summary>The day the lists show; null = the whole period.</summary>
+    DateOnly? _day;
     internal readonly ComboBox Period = new() { MinWidth = 200 };
     internal readonly UsageChart Chart = new() { Height = 220 };
     internal readonly StackPanel Apps = new() { Spacing = 4 };
@@ -31,7 +34,10 @@ public class UsageView : UserControl
         // 0 = this week, 1..3 = weeks ago, 4 = the last 4 weeks
         Period.ItemsSource = new[] { L.T("This week"), L.T("Last week"), L.T("2 weeks ago"), L.T("3 weeks ago"), L.T("Last 4 weeks") };
         Period.SelectedIndex = 0;
-        Period.SelectionChanged += (_, _) => Rebuild();
+        _day = _today();
+        Chart.Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand);
+        Chart.BarClicked += ClickBar;
+        Period.SelectionChanged += (_, _) => { _day = Period.SelectedIndex == 0 ? _today() : null; Rebuild(); };
 
         var head = new DockPanel();
         head.Children.Add(RoutineDialogs.Docked(Period, Dock.Right));
@@ -48,6 +54,7 @@ public class UsageView : UserControl
             {
                 new StackPanel { Children = { _total, _average } },
                 new Border { Background = Card, CornerRadius = new CornerRadius(6), Padding = new Thickness(12), Child = Chart },
+                _scope,
                 lists,
                 new TextBlock { Text = L.T("Counts only while you use the computer (not locked, asleep or 15 minutes without use)."), Foreground = Dim, TextWrapping = TextWrapping.Wrap },
             }
@@ -82,6 +89,15 @@ public class UsageView : UserControl
         return Enumerable.Range(0, 7).Select(i => monday.AddDays(-7 * sel + i)).ToList();
     }
 
+    /// <summary>Click a bar: the lists show that day; click it again: the whole period. Days to come have nothing to show.</summary>
+    internal void ClickBar(int index)
+    {
+        var d = Days()[index];
+        if (d > _today()) return;
+        _day = _day == d ? null : d;
+        Rebuild();
+    }
+
     void Rebuild()
     {
         var today = _today();
@@ -93,8 +109,13 @@ public class UsageView : UserControl
         int counted = days.Count(d => d <= today);
         _total.Text = Usage.Format(total);
         _average.Text = L.F("Daily average: {0}", Usage.Format(counted == 0 ? TimeSpan.Zero : total / counted));
-        Fill(Apps, Usage.Top(Data.UsageApps, days), L.T("Nothing yet."));
-        Fill(Sites, Usage.Top(Data.UsageSites, days), L.T("Nothing yet. Sites need the browser extension."));
+        var shown = _day is { } one && days.Contains(one) ? new List<DateOnly> { one } : days;
+        Chart.Selected = shown.Count == 1 ? days.IndexOf(shown[0]) : null;
+        _scope.Text = shown.Count == 1
+            ? L.F("Programs and sites on {0}. Click a bar to pick another day, or the same one to see the whole period.", $"{DayName(shown[0].DayOfWeek)} {shown[0]:dd/MM}")
+            : L.T("Programs and sites of the whole period. Click a bar to see one day.");
+        Fill(Apps, Usage.Top(Data.UsageApps, shown), L.T("Nothing yet."));
+        Fill(Sites, Usage.Top(Data.UsageSites, shown), L.T("Nothing yet. Sites need the browser extension."));
     }
 
     static string DayName(DayOfWeek d) => L.T(d switch

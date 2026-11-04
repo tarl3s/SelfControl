@@ -33,12 +33,23 @@ public class UsageTests
             Assert.Equal(TimeSpan.FromHours(2), v.Chart.Bars.Single(b => b.Today).Time);
             Assert.Equal("Steam", ((TextBlock)((Grid)v.Apps.Children[0]).Children[0]).Text);
             Assert.IsType<TextBlock>(v.Sites.Children[0]);                         // no sites this week
+            Usage.Add(s.Data, today.AddDays(-1), TimeSpan.FromHours(3), "Yesterday");
+            s.DataChanged();
+            Assert.Single(v.Apps.Children);                                         // only today, not the week
+            v.ClickBar(2);                                                          // Wednesday
+            Assert.Equal("Yesterday", ((TextBlock)((Grid)v.Apps.Children[0]).Children[0]).Text);
+            Assert.Single(v.Apps.Children);
+            v.ClickBar(5);                                                          // a day to come: ignored
+            Assert.Equal(2, v.Chart.Selected);
+            v.ClickBar(2);                                                          // again: the whole week
+            Assert.Equal(2, v.Apps.Children.Count);
+            Assert.Null(v.Chart.Selected);
             v.Period.SelectedIndex = 1;                                             // last week
             Assert.Equal(TimeSpan.FromHours(1), v.Chart.Bars[3].Time);              // its Thursday
             Assert.Equal("youtube.com", ((TextBlock)((Grid)v.Sites.Children[0]).Children[0]).Text);
             v.Period.SelectedIndex = 4;                                             // last 4 weeks
             Assert.Equal(28, v.Chart.Bars.Count);
-            Assert.Equal(2, v.Apps.Children.Count);
+            Assert.Equal(3, v.Apps.Children.Count);
         }
         finally { s.Dispose(); try { Directory.Delete(dir, true); } catch { } }
     }

@@ -48,6 +48,8 @@ public static partial class L
         ["Edit activity"] = "Editar atividade",
         ["Title"] = "Título",
         ["Usage"] = "Uso",
+        ["Programs and sites on {0}. Click a bar to pick another day, or the same one to see the whole period."] = "Programas e sites de {0}. Clique em outra barra para escolher outro dia, ou na mesma para ver o período inteiro.",
+        ["Programs and sites of the whole period. Click a bar to see one day."] = "Programas e sites do período inteiro. Clique numa barra para ver um dia.",
         ["This week"] = "Esta semana",
         ["Last week"] = "Semana passada",
         ["2 weeks ago"] = "Há 2 semanas",
