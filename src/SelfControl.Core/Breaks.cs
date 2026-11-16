@@ -2,7 +2,7 @@ namespace SelfControl.Core;
 
 /// <summary>
 /// Counts time the computer is in use and says when an hour has passed. Time while the screen is locked,
-/// the PC sleeps (a gap over 5 minutes between ticks) or nobody touched it for 15 minutes is not counted (the hour pauses).
+/// the PC sleeps (a gap over 5 minutes between ticks) or nobody touched it for a while (AppData.IdleMinutes) is not counted (the hour pauses).
 /// </summary>
 public sealed class BreakClock
 {

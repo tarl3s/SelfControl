@@ -34,9 +34,9 @@ public class BreaksTests
     [Fact]
     public void Usage_ActiveOnlyWhenUnlockedAndRecentlyUsed()
     {
-        Assert.True(Usage.IsActive(new FakeActivity { IdleFor = TimeSpan.FromMinutes(14) }));
-        Assert.False(Usage.IsActive(new FakeActivity { IdleFor = TimeSpan.FromMinutes(15) }));
-        Assert.False(Usage.IsActive(new FakeActivity { ScreenLocked = true }));
+        Assert.True(Usage.IsActive(new FakeActivity { IdleFor = TimeSpan.FromMinutes(2) }, 3));
+        Assert.False(Usage.IsActive(new FakeActivity { IdleFor = TimeSpan.FromMinutes(3) }, 3));
+        Assert.False(Usage.IsActive(new FakeActivity { ScreenLocked = true }, 3));
     }
 
     [Fact]

@@ -183,6 +183,7 @@ public class RoutineGridTests
         d.Schedules.Add(new RoutineSchedule { RoutineId = b.Id, WeekStart = RoutineResolver.WeekStart(today) });
         var v = new RoutineView(d, null) { TodayProvider = () => today };
         var picker = (ComboBox)((DockPanel)v.Content!).Children.OfType<StackPanel>().First().Children[0];
+        picker.SelectedItem = b;                    // the view opened with the real date: reselect so the toggle uses `today`
         picker.SelectedItem = a;
         Assert.False(v.ActiveToggle.IsChecked);
         picker.SelectedItem = b;

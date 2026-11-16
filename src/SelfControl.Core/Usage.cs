@@ -2,14 +2,16 @@ namespace SelfControl.Core;
 
 /// <summary>
 /// Time of real use per day, per program and per site: only while the screen is unlocked and a key or the mouse was
-/// used in the last 15 minutes. Keeps the current week and the 3 before it.
+/// used in the last few minutes (<see cref="AppData.IdleMinutes"/>). Keeps the current week and the 3 before it.
 /// </summary>
 public static class Usage
 {
-    public static readonly TimeSpan IdleLimit = TimeSpan.FromMinutes(15);
+    /// <summary>The choices offered in Settings for <see cref="AppData.IdleMinutes"/>.</summary>
+    public static readonly int[] IdleChoices = { 1, 2, 3, 5, 10, 15, 30 };
     public const int Weeks = 4;
 
-    public static bool IsActive(IActivity? a) => a == null || (!a.ScreenLocked && a.IdleFor < IdleLimit);
+    public static bool IsActive(IActivity? a, int idleMinutes) =>
+        a == null || (!a.ScreenLocked && a.IdleFor < TimeSpan.FromMinutes(Math.Max(1, idleMinutes)));
 
     static string Key(DateOnly d) => d.ToString("yyyy-MM-dd");
 

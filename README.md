@@ -40,7 +40,7 @@ cloud: everything stays on your computer.
   follow with your eyes: side to side, up and down, circles, near and far).
 - **Usage** — a bar chart of your time at the computer per day (this week, one of the 3 before, or the last 4 weeks)
   and the programs and sites you used most (sites need the browser extension). It and the
-  hourly break count only real use: not while the screen is locked, the PC sleeps, or after 15 minutes without input.
+  hourly break count only real use: not while the screen is locked, the PC sleeps, or after a few minutes without input (you pick how many in Settings, 5 by default).
 - **Ctrl+Z** undoes the last change, **Delete** removes the selected routine block, **Ctrl+C / Ctrl+V** copy and paste it, and you can export / import all
   your data in Settings. English and Portuguese.
 

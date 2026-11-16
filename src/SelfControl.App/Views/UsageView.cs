@@ -56,7 +56,7 @@ public class UsageView : UserControl
                 new Border { Background = Card, CornerRadius = new CornerRadius(6), Padding = new Thickness(12), Child = Chart },
                 _scope,
                 lists,
-                new TextBlock { Text = L.T("Counts only while you use the computer (not locked, asleep or 15 minutes without use)."), Foreground = Dim, TextWrapping = TextWrapping.Wrap },
+                new TextBlock { Text = L.T("Counts only while you use the computer (not locked, asleep or inactive — see Settings)."), Foreground = Dim, TextWrapping = TextWrapping.Wrap },
             }
         };
         var root = new DockPanel { Margin = new Thickness(24) };

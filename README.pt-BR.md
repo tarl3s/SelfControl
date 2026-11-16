@@ -39,7 +39,7 @@ sem nuvem: tudo fica no seu computador.
 - **Pausas a cada hora** — depois de cada hora no computador ele sugere alongamentos guiados ou um treino dos olhos
   (uma bolinha para seguir com os olhos: lados, cima e baixo, círculos, perto e longe).
 - **Uso** — gráfico de barras do tempo no computador por dia (esta semana, uma das 3 anteriores ou as últimas 4 semanas)
-  e os programas e sites em que você passou mais tempo (sites precisam da extensão do navegador). Ele e a pausa de cada hora só contam uso real: não contam com a tela bloqueada, o PC suspenso ou 15 minutos sem uso.
+  e os programas e sites em que você passou mais tempo (sites precisam da extensão do navegador). Ele e a pausa de cada hora só contam uso real: não contam com a tela bloqueada, o PC suspenso ou alguns minutos sem uso (você escolhe quantos nas Configurações; 5 por padrão).
 - **Ctrl+Z** desfaz a última mudança, **Delete** apaga o bloco selecionado da rotina, **Ctrl+C / Ctrl+V** copiam e colam, e dá para exportar / importar
   todos os dados nas Configurações. Em português e inglês.
 

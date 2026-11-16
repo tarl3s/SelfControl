@@ -1,3 +1,4 @@
+using SelfControl.Core;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -22,6 +23,10 @@ static class SettingsDialog
         var auto = new CheckBox { Content = L.T("Start with Windows") };
         var breaks = new CheckBox { Content = L.T("Suggest breaks (stretching and eyes) every hour"), IsChecked = state.Data.BreakReminders };
         breaks.IsCheckedChanged += (_, _) => { state.Data.BreakReminders = breaks.IsChecked == true; state.DataChanged(); };
+        var idle = new ComboBox { MinWidth = 120, ItemsSource = Usage.IdleChoices.Select(m => L.F("{0} min", m)).ToList() };
+        idle.SelectedIndex = Array.IndexOf(Usage.IdleChoices, state.Data.IdleMinutes) is var ix and >= 0 ? ix : Array.IndexOf(Usage.IdleChoices, 5);
+        idle.SelectionChanged += (_, _) => { if (idle.SelectedIndex >= 0) { state.Data.IdleMinutes = Usage.IdleChoices[idle.SelectedIndex]; state.DataChanged(); } };
+        ToolTip.SetTip(idle, L.T("After this long without keyboard or mouse, usage time and the hourly break stop counting."));
         // Language: null = follow Windows. Applies on restart (every window is built in the language it opened with).
         string?[] langs = { null, L.English, L.Portuguese };
         var language = new ComboBox { MinWidth = 160, SelectedIndex = Math.Max(0, Array.IndexOf(langs, state.Data.Language)) };
@@ -65,6 +70,7 @@ static class SettingsDialog
             Children = { new TextBlock { Text = L.T("Settings"), FontSize = 20, FontWeight = FontWeight.SemiBold },
                 auto,
                 breaks,
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L.T("Inactive after"), VerticalAlignment = VerticalAlignment.Center }, idle } },
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = "Idioma / Language", VerticalAlignment = VerticalAlignment.Center }, language } },
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { export, import } },
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L.F("Version {0}", state.Updater?.CurrentVersion ?? "-"), VerticalAlignment = VerticalAlignment.Center }, check } },

@@ -87,6 +87,8 @@ public class AppData
     public List<HomeBlock> Home { get; set; } = new();
     /// <summary>Suggest stretches / eye exercises after every hour the computer is in use.</summary>
     public bool BreakReminders { get; set; } = true;
+    /// <summary>Minutes without keyboard or mouse after which usage time and the hourly break stop counting.</summary>
+    public int IdleMinutes { get; set; } = 5;
     /// <summary>"en", "pt-BR", or null to follow the Windows language.</summary>
     public string? Language { get; set; }
     /// <summary>Seconds of real use per day ("yyyy-MM-dd"), last 4 weeks.</summary>

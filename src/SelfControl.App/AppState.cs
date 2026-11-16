@@ -220,7 +220,7 @@ public sealed class AppState : IDisposable
         catch (Exception) { /* a toast failure must not crash the app */ }
         _lastCheck = now;
         if (EventScheduler.RemovePast(Data.Events, now) > 0) DataChanged();
-        bool active; try { active = Usage.IsActive(Activity); } catch (Exception) { active = true; }
+        bool active; try { active = Usage.IsActive(Activity, Data.IdleMinutes); } catch (Exception) { active = true; }
         var used = _breaks.Count(now, active);
         if (used > TimeSpan.Zero)
         {
